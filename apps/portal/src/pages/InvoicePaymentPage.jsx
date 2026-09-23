@@ -8,7 +8,6 @@ import ChevronRightIcon from '@mui/icons-material/ChevronRight';
 import { useEffect, useMemo, useState } from 'react';
 import { PortalShell } from '../components/PortalShell';
 import { PaymentMethodModal } from '../components/PaymentMethodModal';
-import { InvoicePaymentBanner } from '../components/InvoicePaymentBanner';
 import { InvoicePreviewDrawer } from '../components/InvoicePreviewDrawer';
 import { InvoiceStatsRow, InvoiceStatsSegmentRow } from '../components/InvoiceStatsRow';
 import { InvoiceBoardList } from '../components/InvoiceBoardList';
@@ -34,7 +33,6 @@ export function InvoicePaymentPage() {
   const [page, setPage] = useState(0);
   const [sortField, setSortField] = useState('dueDate');
   const [sortDirection, setSortDirection] = useState('desc');
-  const [showBanner, setShowBanner] = useState(true);
   const [selectedIds, setSelectedIds] = useState([]);
   const [payModalOpen, setPayModalOpen] = useState(false);
   const [invoicesForPayment, setInvoicesForPayment] = useState([]);
@@ -81,13 +79,6 @@ export function InvoicePaymentPage() {
   const statusSegmentStats = useMemo(() => getInvoiceStatusSegmentStats(mockInvoices), []);
   const isBoardLayout = statsLayout === 'board';
   const pendingInvoices = useMemo(() => getPendingInvoices(mockInvoices), []);
-  const awaitingPaymentCount = pendingInvoices.length;
-  const isViewingPendingOnly = status === 'Pending' && !site && !query.trim();
-
-  const openPaymentModalFromBanner = () => {
-    beginPayment(pendingInvoices);
-  };
-
   const openPaymentModalForInvoice = (invoice) => {
     if (invoice.status === 'Paid') return;
     beginPayment([invoice]);
@@ -171,39 +162,13 @@ export function InvoicePaymentPage() {
   };
 
   return (
-    <PortalShell
-      activeNav="invoice-payment"
-      mainSx={{ pl: 0, pt: 0 }}
-      banner={
-        showBanner && !isBoardLayout ? (
-          <InvoicePaymentBanner
-            count={awaitingPaymentCount}
-            viewInvoicesLabel="View Invoices"
-            onViewInvoices={() => {
-              if (isViewingPendingOnly) {
-                setStatus('');
-                setSite('');
-                setQuery('');
-                return;
-              }
-              setStatus('Pending');
-              setSite('');
-              setQuery('');
-            }}
-            onPayNow={openPaymentModalFromBanner}
-            onDismiss={() => setShowBanner(false)}
-          />
-        ) : null
-      }
-    >
+    <PortalShell activeNav="invoice-payment" mainSx={{ pl: 0, pt: 0 }}>
       <Stack spacing={2.5}>
         <Box sx={{ mr: '-32px', width: 'calc(100% + 32px)' }}>
           {isBoardLayout ? (
             <InvoiceStatsRow cards={dashboardCards} stackedLayout />
           ) : (
             <InvoiceStatsSegmentRow
-              totalLabel={statusSegmentStats.totalLabel}
-              outstandingLabel={statusSegmentStats.outstandingLabel}
               segments={statusSegmentStats.segments}
               activeStatus={status}
               onSelectStatus={setStatus}

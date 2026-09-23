@@ -14,7 +14,7 @@ const MuiSelect = ({ _palette }) => ({
         padding: '10px 14px !important',
         color: semantic.text.primary,
         '&.Mui-disabled': {
-          '-webkit-text-fill-color': `${semantic.text.disabled} !important`, // Change the color of text when input is disabled
+          WebkitTextFillColor: `${semantic.text.disabled} !important`, // Change the color of text when input is disabled
         },
         '&::placeholder': {
           color: semantic.text.placeholderField, // Placeholder Color

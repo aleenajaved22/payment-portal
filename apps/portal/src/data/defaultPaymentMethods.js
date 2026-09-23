@@ -9,27 +9,27 @@ const SEED_METHODS = [
   {
     id: 'seed-credit-card',
     typeId: 'credit-card',
-    details: { brand: 'visa', last4: '4242', nameOnCard: 'Alex Morgan', expiryMonth: '08', expiryYear: '2027' },
+    details: { brand: 'visa', last4: '4242', nameOnCard: 'Alina Morgan', expiryMonth: '08', expiryYear: '2027' },
   },
   {
     id: 'seed-ach',
     typeId: 'ach',
-    details: { routingNumber: '021000021', accountLast4: '6789', accountHolderName: 'Alex Morgan' },
+    details: { routingNumber: '021000021', accountLast4: '6789', accountHolderName: 'Alina Morgan' },
   },
   {
     id: 'seed-paypal',
     typeId: 'paypal',
-    details: { email: 'alex.morgan@example.com' },
+    details: { email: 'alina.morgan@example.com' },
   },
   {
     id: 'seed-zelle',
     typeId: 'zelle',
-    details: { contact: 'alex.morgan@example.com', nickname: 'Primary Zelle' },
+    details: { contact: 'alina.morgan@example.com', nickname: 'Primary Zelle' },
   },
   {
     id: 'seed-venmo',
     typeId: 'venmo',
-    details: { username: 'alexmorgan', phone: '(415) 555-0134' },
+    details: { username: 'alinamorgan', phone: '(415) 555-0134' },
   },
 ];
 

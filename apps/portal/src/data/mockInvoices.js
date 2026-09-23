@@ -27,113 +27,203 @@ const DASHBOARD_STAT_THEME = {
 
 /** Shared bill-to details keyed by site (FilterGo customer portal). */
 export const billToBySite = {
-  KFC: {
+  'KFC Owen Tech': {
+    storeCode: 'FQ-04412',
     address: '14508 Owen Tech Blvd Austin, TX 78728',
     contactPerson: 'John Hairgrove',
     contactPhone: '(512) 251-4900',
     contactEmail: 'john.hairgrove@filtergo.com',
   },
-  'Zorinski Lake': {
+  'KFC Lakeview': {
+    storeCode: 'FQ-06120',
     address: '892 Lakeview Dr Omaha, NE 68114',
     contactPerson: 'Maria Chen',
     contactPhone: '(402) 555-0182',
     contactEmail: 'maria.chen@filtergo.com',
   },
-  Altadena: {
-    address: '2200 Altadena Dr Pasadena, CA 91107',
-    contactPerson: 'David Reyes',
-    contactPhone: '(626) 555-0144',
-    contactEmail: 'david.reyes@filtergo.com',
+  'KFC Fremont': {
+    storeCode: 'FQ-05893',
+    address: '707 East 23rd Street Fremont, NE 68025',
+    contactPerson: 'Rosie Padilla',
+    contactPhone: '(402) 555-0147',
+    contactEmail: 'rosie.padilla@filtergo.com',
   },
 };
+
+/**
+ * Invoice dates are held as offsets from today rather than fixed strings.
+ *
+ * They used to be hard-coded to mid-2025, which meant the demo drifted: every
+ * invoice, including the ones labelled Pending, read as a year past due, and any
+ * figure derived from a date — days overdue, due soon — came out absurd. Deriving
+ * them from the clock keeps the Overdue / Pending labels true whenever the app is
+ * opened, and matches how subscriptionMock already works.
+ */
+function shiftDays(days) {
+  const date = new Date();
+  date.setHours(0, 0, 0, 0);
+  date.setDate(date.getDate() + days);
+  return date;
+}
+
+/** 'MM/DD/YY' — the format parseInvoiceDate and the tables expect for due dates. */
+function dueIn(days) {
+  const date = shiftDays(days);
+  const mm = String(date.getMonth() + 1).padStart(2, '0');
+  const dd = String(date.getDate()).padStart(2, '0');
+  return `${mm}/${dd}/${String(date.getFullYear()).slice(-2)}`;
+}
+
+/** 'MM/DD/YYYY' — issue dates carry the full year. */
+function issuedAgo(days) {
+  const date = shiftDays(-days);
+  const mm = String(date.getMonth() + 1).padStart(2, '0');
+  const dd = String(date.getDate()).padStart(2, '0');
+  return `${mm}/${dd}/${date.getFullYear()}`;
+}
 
 export const mockInvoices = [
   {
     id: '1',
     invoiceNumber: 'INV-10482',
-    site: 'KFC',
+    site: 'KFC Owen Tech',
     amount: '$4,250.00',
     status: 'Pending',
     contract: 'Contract Q1-2024',
-    dueDate: '08/15/25',
-    invoiceDate: '12/12/2024',
+    dueDate: dueIn(6),
+    invoiceDate: issuedAgo(24),
     paymentTerms: 'NET 10',
   },
   {
     id: '2',
     invoiceNumber: 'INV-10481',
-    site: 'Zorinski Lake',
+    site: 'KFC Lakeview',
     amount: '$2,180.00',
     status: 'Paid',
     contract: 'Contract Q2-2024',
-    dueDate: '08/10/25',
-    invoiceDate: '11/28/2024',
+    dueDate: dueIn(-40),
+    invoiceDate: issuedAgo(70),
     paymentTerms: 'NET 10',
   },
   {
     id: '3',
     invoiceNumber: 'INV-10480',
-    site: 'Zorinski Lake',
+    site: 'KFC Lakeview',
     amount: '$3,420.00',
     status: 'Overdue',
     contract: 'Contract Q1-2024',
-    dueDate: '08/01/25',
-    invoiceDate: '12/01/2024',
+    dueDate: dueIn(-34),
+    invoiceDate: issuedAgo(64),
     paymentTerms: 'NET 10',
   },
   {
     id: '4',
     invoiceNumber: 'INV-10479',
-    site: 'Altadena',
+    site: 'KFC Fremont',
     amount: '$1,890.00',
     status: 'Paid',
     contract: 'Contract Q2-2024',
-    dueDate: '07/28/25',
-    invoiceDate: '11/15/2024',
+    dueDate: dueIn(-61),
+    invoiceDate: issuedAgo(91),
     paymentTerms: 'NET 10',
   },
   {
     id: '5',
     invoiceNumber: 'INV-10478',
-    site: 'KFC',
+    site: 'KFC Owen Tech',
     amount: '$5,100.00',
     status: 'Pending',
     contract: 'Contract Q2-2024',
-    dueDate: '08/20/25',
-    invoiceDate: '12/05/2024',
+    dueDate: dueIn(13),
+    invoiceDate: issuedAgo(17),
     paymentTerms: 'NET 10',
   },
   {
     id: '6',
     invoiceNumber: 'INV-10477',
-    site: 'Zorinski Lake',
+    site: 'KFC Lakeview',
     amount: '$2,650.00',
     status: 'Paid',
     contract: 'Contract Q1-2024',
-    dueDate: '07/22/25',
-    invoiceDate: '11/20/2024',
+    dueDate: dueIn(-75),
+    invoiceDate: issuedAgo(105),
     paymentTerms: 'NET 10',
   },
   {
     id: '7',
     invoiceNumber: 'INV-10476',
-    site: 'Altadena',
+    site: 'KFC Fremont',
     amount: '$980.00',
     status: 'Overdue',
     contract: 'Contract Q1-2024',
-    dueDate: '07/15/25',
-    invoiceDate: '11/10/2024',
+    dueDate: dueIn(-52),
+    invoiceDate: issuedAgo(82),
     paymentTerms: 'NET 10',
   },
   {
     id: '8',
     invoiceNumber: 'INV-10475',
-    site: 'KFC',
+    site: 'KFC Owen Tech',
     amount: '$3,775.00',
     status: 'Pending',
     contract: 'Contract Q1-2024',
-    dueDate: '08/25/25',
-    invoiceDate: '12/08/2024',
+    dueDate: dueIn(21),
+    invoiceDate: issuedAgo(9),
+    paymentTerms: 'NET 10',
+  },
+  {
+    id: '9',
+    invoiceNumber: 'INV-10474',
+    site: 'KFC Lakeview',
+    amount: '$1,860.00',
+    status: 'Overdue',
+    contract: 'Contract Q1-2024',
+    dueDate: dueIn(-21),
+    invoiceDate: issuedAgo(51),
+    paymentTerms: 'NET 10',
+  },
+  {
+    id: '10',
+    invoiceNumber: 'INV-10473',
+    site: 'KFC Fremont',
+    amount: '$2,340.00',
+    status: 'Overdue',
+    contract: 'Contract Q2-2024',
+    dueDate: dueIn(-12),
+    invoiceDate: issuedAgo(42),
+    paymentTerms: 'NET 10',
+  },
+  {
+    id: '11',
+    invoiceNumber: 'INV-10484',
+    site: 'KFC Lakeview',
+    amount: '$2,910.00',
+    status: 'Pending',
+    contract: 'Contract Q2-2024',
+    dueDate: dueIn(9),
+    invoiceDate: issuedAgo(21),
+    paymentTerms: 'NET 10',
+  },
+  {
+    id: '12',
+    invoiceNumber: 'INV-10485',
+    site: 'KFC Fremont',
+    amount: '$1,450.00',
+    status: 'Pending',
+    contract: 'Contract Q1-2024',
+    dueDate: dueIn(17),
+    invoiceDate: issuedAgo(13),
+    paymentTerms: 'NET 10',
+  },
+  {
+    id: '13',
+    invoiceNumber: 'INV-10486',
+    site: 'KFC Owen Tech',
+    amount: '$3,260.00',
+    status: 'Pending',
+    contract: 'Contract Q2-2024',
+    dueDate: dueIn(28),
+    invoiceDate: issuedAgo(2),
     paymentTerms: 'NET 10',
   },
 ];
@@ -173,6 +263,7 @@ export function getUnpaidInvoices(invoices = mockInvoices) {
 export function getBillToForSite(site) {
   return (
     billToBySite[site] ?? {
+      storeCode: 'FQ-04412',
       address: '14508 Owen Tech Blvd Austin, TX 78728',
       contactPerson: 'John Hairgrove',
       contactPhone: '(512) 251-4900',
@@ -307,8 +398,8 @@ export function getInvoiceDashboardCards(invoices = mockInvoices) {
 }
 
 export function getInvoiceStatusSegmentStats(invoices = mockInvoices) {
-  // Ordered by urgency, not by settlement: Overdue leads in both the bar and the
-  // legend beneath it, which stay in step so each legend item sits under its segment.
+  // Ordered by urgency: Overdue leads the legend. Paid is computed here for the
+  // totals but filtered out below — the legend shows only what still needs action.
   const segments = [
     {
       id: 'overdue',
@@ -349,11 +440,17 @@ export function getInvoiceStatusSegmentStats(invoices = mockInvoices) {
     .filter((segment) => segment.label !== 'Paid')
     .reduce((sum, segment) => sum + segment.count, 0);
 
+  /**
+   * The legend only carries what the customer can act on — Paid is settled, so it
+   * drops out of the list while still counting toward the total shown beside it.
+   */
+  const actionableSegments = segments.filter((segment) => segment.label !== 'Paid');
+
   return {
     totalLabel: formatInvoiceTotal(totalValue),
     outstandingLabel: formatInvoiceTotal(outstandingValue),
     outstandingCount,
-    segments: segments.map((segment) => ({
+    segments: actionableSegments.map((segment) => ({
       ...segment,
       percent: totalValue === 0 ? 0 : Math.round((segment.value / safeTotal) * 100),
     })),

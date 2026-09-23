@@ -1,5 +1,6 @@
 import { Navigate, Route, Routes } from 'react-router-dom';
 import { ProtectedRoute } from './components/ProtectedRoute';
+import { DashboardPage } from './pages/DashboardPage';
 import { InvoicePaymentPage } from './pages/InvoicePaymentPage';
 import { LoginPage } from './pages/LoginPage';
 import { PaymentMethodsPage } from './pages/PaymentMethodsPage';
@@ -8,7 +9,7 @@ import { useAuth } from './auth/AuthContext';
 
 function RootRedirect() {
   const { isAuthenticated } = useAuth();
-  return <Navigate to={isAuthenticated ? '/reports' : '/login'} replace />;
+  return <Navigate to={isAuthenticated ? '/dashboard' : '/login'} replace />;
 }
 
 export default function App() {
@@ -16,6 +17,14 @@ export default function App() {
     <Routes>
       <Route path="/" element={<RootRedirect />} />
       <Route path="/login" element={<LoginPage />} />
+      <Route
+        path="/dashboard"
+        element={
+          <ProtectedRoute>
+            <DashboardPage />
+          </ProtectedRoute>
+        }
+      />
       <Route
         path="/reports"
         element={

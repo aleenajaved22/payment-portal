@@ -7,6 +7,7 @@ import { UserAccountMenu } from './UserAccountMenu';
 import { Tab, Tabs } from './design-system';
 
 const NAV_ITEMS = [
+  { label: 'Dashboard', value: 'dashboard', path: '/dashboard' },
   { label: 'Reports', value: 'reports', path: '/reports' },
   { label: 'Payments', value: 'invoice-payment', path: '/invoice-payment' },
 ];

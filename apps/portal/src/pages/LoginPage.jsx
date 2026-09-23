@@ -60,7 +60,7 @@ export function LoginPage() {
   const [errors, setErrors] = useState({});
 
   if (isAuthenticated) {
-    const redirectTo = location.state?.from?.pathname || '/reports';
+    const redirectTo = location.state?.from?.pathname || '/dashboard';
     return <Navigate to={redirectTo} replace />;
   }
 
@@ -82,7 +82,7 @@ export function LoginPage() {
 
     setErrors({});
     login(email);
-    navigate('/reports', { replace: true });
+    navigate('/dashboard', { replace: true });
   };
 
   const inputRootSx = {

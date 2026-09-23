@@ -7,6 +7,6 @@ export default defineConfig({
     dedupe: ['react', 'react-dom', '@emotion/react', '@emotion/styled', '@mui/material'],
   },
   server: {
-    port: 5173,
+    port: process.env.PORT ? Number(process.env.PORT) : 5173,
   },
 });

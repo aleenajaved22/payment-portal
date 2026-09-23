@@ -88,20 +88,20 @@ export function InvoicesToolbar({
         </Stack>
       </Stack>
 
-      {showPayNow ? (
-        <Button
-          variant="primary"
-          onClick={onPayNow}
-          endIcon={<ArrowForwardIcon sx={{ fontSize: 18 }} />}
-          sx={{
-            alignSelf: { xs: 'flex-start', md: 'center' },
-            minWidth: 105,
-            '& .MuiButton-endIcon': { ml: 0.75 },
-          }}
-        >
-          Pay Now
-        </Button>
-      ) : null}
+      {/* Always present, but inert until the customer selects invoices to pay. */}
+      <Button
+        variant="primary"
+        onClick={onPayNow}
+        disabled={!showPayNow}
+        endIcon={<ArrowForwardIcon sx={{ fontSize: 18 }} />}
+        sx={{
+          alignSelf: { xs: 'flex-start', md: 'center' },
+          minWidth: 105,
+          '& .MuiButton-endIcon': { ml: 0.75 },
+        }}
+      >
+        Pay Now
+      </Button>
     </Stack>
   );
 }

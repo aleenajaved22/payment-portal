@@ -40,14 +40,13 @@ function buildBillToLines(invoice) {
 
   if (billTo) {
     const addressParts = billTo.address.split(',').map((part) => part.trim());
-    const siteLine =
-      site === 'KFC' ? 'KBP Brands FQ-05893 Fremont KFC' : site === 'Zorinski Lake' ? site : `${site}`;
+    const siteLine = billTo.storeCode ? `KBP Brands ${billTo.storeCode} ${site}` : site;
     return [contact, siteLine, ...addressParts, 'United States'];
   }
 
   return [
     'Rosie Padilla',
-    'KBP Brands FQ-05893 Fremont KFC',
+    'KBP Brands FQ-05893 KFC Fremont',
     '707 East 23rd Street',
     'Fremont, NE 68025',
     'United States',

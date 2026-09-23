@@ -46,7 +46,7 @@ const MuiTextField = ({ _palette }) => ({
         },
 
         '&.Mui-disabled': {
-          '-webkit-text-fill-color': '#AEAEB2 !important', // Change the color of text when input is disabled
+          WebkitTextFillColor: '#AEAEB2 !important', // Change the color of text when input is disabled
         },
 
         '&::placeholder': {
