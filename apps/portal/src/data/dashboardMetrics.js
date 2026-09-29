@@ -116,3 +116,48 @@ export function getUnpaidInvoicesSorted(invoices = mockInvoices, now = new Date(
     })
     .map((invoice) => ({ ...invoice, daysToDue: daysFromToday(invoice.dueDate, startOfToday) }));
 }
+
+/**
+ * The most recent payment made in this session, or null.
+ *
+ * Derived from the invoices themselves rather than from whatever the toast
+ * happens to be holding: `markInvoicesPaid` stamps every invoice in a batch with
+ * the same `paidAt`, so the newest timestamp and the rows that share it *are*
+ * the last payment. That means the fact outlives the toast being dismissed, and
+ * cannot drift from the list it describes.
+ *
+ * Seeded invoices that arrive already Paid carry no `paidAt`, so they are
+ * correctly excluded — we only know about payments we watched happen.
+ */
+export function getLastPayment(invoices = mockInvoices) {
+  const settled = invoices.filter((invoice) => invoice.status === 'Paid' && invoice.paidAt);
+  if (settled.length === 0) return null;
+
+  const latest = settled.reduce(
+    (newest, invoice) => (invoice.paidAt > newest ? invoice.paidAt : newest),
+    settled[0].paidAt,
+  );
+  const batch = settled.filter((invoice) => invoice.paidAt === latest);
+
+  return {
+    paidAt: latest,
+    count: batch.length,
+    amount: batch.reduce((sum, invoice) => sum + parseInvoiceAmount(invoice.amount), 0),
+  };
+}
+
+/** "today", "yesterday", then a date — relative reads better at this size. */
+export function formatPaidWhen(iso) {
+  const then = new Date(iso);
+  if (Number.isNaN(then.getTime())) return null;
+
+  const startOfToday = new Date();
+  startOfToday.setHours(0, 0, 0, 0);
+  const thenDay = new Date(then);
+  thenDay.setHours(0, 0, 0, 0);
+
+  const days = Math.round((startOfToday.getTime() - thenDay.getTime()) / 86400000);
+  if (days <= 0) return 'today';
+  if (days === 1) return 'yesterday';
+  return then.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+}

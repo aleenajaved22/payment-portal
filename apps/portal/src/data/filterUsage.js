@@ -33,6 +33,32 @@ const USAGE_BY_SITE = {
   ],
 };
 
+/**
+ * The window these counts cover: the trailing twelve calendar months, ending
+ * with the current one.
+ *
+ * The panel used to label itself "Filters Replaced (y)". Two problems with that:
+ * "(y)" is not something anyone reads as "yearly", and the counts above carry no
+ * dates at all, so the claim had nothing behind it. Defining the window here —
+ * from the clock, like mockInvoices and mockReports — means the label and the
+ * figures share one definition, and it is the thing to hand a real query when
+ * these counts come from service records instead of a constant.
+ *
+ * Whole months rather than a rolling 365 days, so the range names two clean
+ * month boundaries instead of landing mid-month at both ends.
+ */
+export function getFilterUsageWindow(now = new Date()) {
+  const end = new Date(now.getFullYear(), now.getMonth(), 1);
+  const start = new Date(end.getFullYear(), end.getMonth() - 11, 1);
+  return { start, end };
+}
+
+/** "Oct 2025 – Sep 2026". An en dash, because it is a range, not a subtraction. */
+export function formatFilterUsageWindow(window = getFilterUsageWindow()) {
+  const month = (date) => date.toLocaleDateString('en-US', { month: 'short', year: 'numeric' });
+  return `${month(window.start)} – ${month(window.end)}`;
+}
+
 /** Largest size first, with each one's share of the total. */
 export function getFilterMix(site) {
   const rows = site ? USAGE_BY_SITE[site] ?? [] : mergeAllSites();

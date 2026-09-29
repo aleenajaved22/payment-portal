@@ -1,11 +1,13 @@
 import Box from '@mui/material/Box';
 import Stack from '@mui/material/Stack';
+import useMediaQuery from '@mui/material/useMediaQuery';
 import Typography from '@mui/material/Typography';
 import { useTheme } from '@mui/material/styles';
 import ArrowForwardIcon from '@mui/icons-material/ArrowForward';
 import { CardHeading, GridCell } from './DashboardGrid';
 import { Button } from '../design-system';
 import { formatInvoiceDueDate, formatInvoiceTotal } from '../../data/mockInvoices';
+import { formatPaidWhen } from '../../data/dashboardMetrics';
 
 /**
  * Everything owed, and the means to clear it — one surface instead of two.
@@ -22,6 +24,32 @@ import { formatInvoiceDueDate, formatInvoiceTotal } from '../../data/mockInvoice
  */
 
 const SEGMENT_GAP = '3px';
+
+/**
+ * The panel's figure, shared by both states.
+ *
+ * The empty state used to drop it entirely: money owed got a 30px total, money
+ * cleared got a heading and then 244px of nothing. Keeping the slot filled means
+ * the panel holds its shape as it flips, and $0.00 reads as a result you reached
+ * rather than a number that failed to arrive.
+ */
+function OutstandingTotal({ children }) {
+  const theme = useTheme();
+  return (
+    <Typography
+      sx={{
+        fontSize: 30,
+        fontWeight: 700,
+        lineHeight: '38px',
+        letterSpacing: '-0.02em',
+        fontVariantNumeric: 'tabular-nums',
+        color: theme.palette.textPrimary,
+      }}
+    >
+      {children}
+    </Typography>
+  );
+}
 
 /**
  * The colour key, beside the title, so the bar itself needs no labels.
@@ -115,8 +143,10 @@ function InvoiceRow({ invoice, onPay, isLast }) {
  * line beneath it carry that, and the link stays because the panel is still
  * the place to check in on payments even when none are due right now.
  */
-function EmptyOutstanding({ onGoToPayments }) {
+function EmptyOutstanding({ site, lastPayment, onGoToPayments }) {
   const theme = useTheme();
+  const reducedMotion = useMediaQuery('(prefers-reduced-motion: reduce)');
+  const paidWhen = lastPayment ? formatPaidWhen(lastPayment.paidAt) : null;
 
   return (
     <Box
@@ -130,12 +160,16 @@ function EmptyOutstanding({ onGoToPayments }) {
         textAlign: 'center',
       }}
     >
+      {/* Plays once and rests rather than looping when the viewer has asked for
+          reduced motion — a perpetual animation on a panel that says "nothing to
+          do here" is the last thing that should keep moving. Every other video
+          in the app already honours the query. */}
       <Box
         component="video"
         src="/gusty.mp4"
         autoPlay
         muted
-        loop
+        loop={!reducedMotion}
         playsInline
         aria-hidden="true"
         sx={{ width: 220, height: 220, objectFit: 'contain' }}
@@ -143,22 +177,73 @@ function EmptyOutstanding({ onGoToPayments }) {
       <Typography sx={{ mt: 1, fontSize: 15, fontWeight: 600, color: theme.palette.textPrimary }}>
         You're all caught up
       </Typography>
-      <Typography sx={{ mt: 0.5, fontSize: 13, color: theme.palette.textSecondary3 }}>
-        No invoices are awaiting payment.
+      {/* Names the scope when one is set. "No invoices are awaiting payment"
+          under a "KFC Fremont" filter reads as "you owe nothing anywhere",
+          which for an owner of several sites is a different and wrong claim. */}
+      <Typography sx={{ mt: 0.5, fontSize: 13, color: theme.palette.textSecondary2 }}>
+        {site ? `Nothing is awaiting payment at ${site}.` : 'No invoices are awaiting payment.'}
       </Typography>
+
+      {/* Gives the state a memory. Arriving here by settling $29,345 looked
+          identical to arriving here never having owed anything — the toast
+          carried the whole difference and then dismissed itself. A discrete
+          fact, so it takes a capsule rather than a third line of prose. */}
+      {lastPayment ? (
+        <Stack
+          direction="row"
+          alignItems="baseline"
+          spacing={0.75}
+          sx={{
+            mt: 1.75,
+            px: 1.5,
+            py: 0.75,
+            borderRadius: '999px',
+            backgroundColor: theme.palette.surfaceSuccessSubtle,
+          }}
+        >
+          <Typography sx={{ fontSize: 12, color: theme.palette.textSecondary2 }}>Last payment</Typography>
+          <Typography
+            sx={{
+              fontSize: 13,
+              fontWeight: 700,
+              fontVariantNumeric: 'tabular-nums',
+              color: theme.palette.textBrandOnSubtle,
+            }}
+          >
+            {formatInvoiceTotal(lastPayment.amount)}
+          </Typography>
+          {paidWhen ? (
+            <Typography sx={{ fontSize: 12, color: theme.palette.textSecondary2 }}>· {paidWhen}</Typography>
+          ) : null}
+        </Stack>
+      ) : null}
+
+      {/* Names what it opens. "Go to Payments" named a menu item; after settling
+          everything, the thing you want is to see what you just settled. */}
       <Button
         variant="onlyText"
         onClick={onGoToPayments}
         endIcon={<ArrowForwardIcon sx={{ fontSize: 16 }} />}
-        sx={{ mt: 2, color: theme.palette.textBrand }}
+        sx={{ mt: 2, color: theme.palette.textBrandOnSubtle }}
       >
-        Go to Payments
+        View paid invoices
       </Button>
     </Box>
   );
 }
 
-export function OutstandingPanel({ totals, invoices, onPay, onPayAll, flex = 1, last = false }) {
+export function OutstandingPanel({
+  totals,
+  invoices,
+  site,
+  lastPayment,
+  onPay,
+  onPayAll,
+  onGoToPayments,
+  onViewAll,
+  flex = 1,
+  last = false,
+}) {
   const theme = useTheme();
   const hasOutstanding = totals.outstanding > 0;
 
@@ -173,32 +258,43 @@ export function OutstandingPanel({ totals, invoices, onPay, onPayAll, flex = 1, 
         title="Outstanding"
         action={
           hasOutstanding ? (
-            <Button variant="primary" onClick={onPayAll}>
-              Pay all
-            </Button>
+            /* The panel lists what is owed but is not the whole ledger — there
+               was no way out of it to the full invoice list except the nav.
+               "View all" mirrors the Reports panel's own escape hatch, and sits
+               quietly beside the primary action rather than competing with it. */
+            <Stack direction="row" alignItems="center" spacing={1}>
+              {onViewAll ? (
+                <Button
+                  variant="tertiaryGrey"
+                  size="small"
+                  onClick={onViewAll}
+                  sx={{ color: theme.palette.textBrandOnSubtle }}
+                >
+                  View all
+                </Button>
+              ) : null}
+              <Button variant="primary" onClick={onPayAll}>
+                Pay all
+              </Button>
+            </Stack>
           ) : null
         }
       />
 
       {!hasOutstanding ? (
-        <EmptyOutstanding onGoToPayments={onPayAll} />
+        <>
+          {/* No bar beneath it: the track means "of everything billed, this much
+              is still owed", and an empty grey track reads as a skeleton that
+              never loaded rather than as a line with nothing left on it. */}
+          <OutstandingTotal>{formatInvoiceTotal(0)}</OutstandingTotal>
+          <EmptyOutstanding site={site} lastPayment={lastPayment} onGoToPayments={onGoToPayments} />
+        </>
       ) : (
         <>
           {/* The legend sits on the baseline directly above the bar it explains,
               which leaves the top-right corner to the one action on the card. */}
           <Stack direction="row" alignItems="flex-end" justifyContent="space-between" spacing={2}>
-            <Typography
-              sx={{
-                fontSize: 30,
-                fontWeight: 700,
-                lineHeight: '38px',
-                letterSpacing: '-0.02em',
-                fontVariantNumeric: 'tabular-nums',
-                color: theme.palette.textPrimary,
-              }}
-            >
-              {formatInvoiceTotal(totals.outstanding)}
-            </Typography>
+            <OutstandingTotal>{formatInvoiceTotal(totals.outstanding)}</OutstandingTotal>
             <Box sx={{ flexShrink: 0, pb: '6px' }}>
               <BarLegend items={legendItems} />
             </Box>

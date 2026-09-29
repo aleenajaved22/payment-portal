@@ -21,7 +21,6 @@ export const EMPTY_PAYMENT_METHOD_FORMS = {
   },
   paypal: {
     email: '',
-    password: '',
   },
   zelle: {
     contact: '',
@@ -222,3 +221,37 @@ export function getPaymentMethodRowDisplay(method) {
   }
 }
 
+
+/**
+ * The shortest thing you can call a saved method in running prose — "Visa ••••
+ * 4242", "Bank account •••• 6789", "@alinamorgan".
+ *
+ * Distinct from `getPaymentMethodRowDisplay().primary`, which leads with the
+ * person (the cardholder's name), because a confirmation is about the
+ * instrument: "$980.00 paid with Alina Morgan" reads as paying a person, which
+ * is precisely what did not happen.
+ */
+export function getPaymentMethodShortLabel(method) {
+  if (!method) return null;
+  const details = method.details ?? {};
+
+  switch (method.typeId) {
+    case 'credit-card': {
+      const brand = getCardBrand(details.brand).label;
+      return details.last4 ? `${brand} •••• ${details.last4}` : brand;
+    }
+    case 'ach':
+      return details.accountLast4 ? `bank account •••• ${details.accountLast4}` : 'your bank account';
+    case 'paypal':
+      return details.email ? `PayPal (${details.email})` : 'PayPal';
+    case 'zelle':
+      return details.nickname?.trim() || details.contact?.trim() || 'Zelle';
+    case 'venmo': {
+      const username = details.username?.trim();
+      if (!username) return 'Venmo';
+      return username.startsWith('@') ? username : `@${username}`;
+    }
+    default:
+      return method.label ?? null;
+  }
+}

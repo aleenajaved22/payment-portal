@@ -5,16 +5,26 @@ import Typography from '@mui/material/Typography';
 import { useTheme } from '@mui/material/styles';
 import ChevronLeftIcon from '@mui/icons-material/ChevronLeft';
 import ChevronRightIcon from '@mui/icons-material/ChevronRight';
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { PortalShell } from '../components/PortalShell';
 import { ReportsToolbar } from '../components/ReportsToolbar';
 import { EmptyState, PageHeader, ReportsTable } from '../components/design-system';
-import { mockReports } from '../data/mockReports';
+import { useReports } from '../context/ReportsContext';
+import {
+  downloadReport,
+  formatDateRange,
+  getReportDateRange,
+  getReportsSpan,
+  isReportInRange,
+} from '../data/reportFilters';
 
 const ROWS_PER_PAGE = 8;
 
 export function ReportsPage() {
   const theme = useTheme();
+  const { reports, newCount, markReportRead } = useReports();
+  const [searchParams, setSearchParams] = useSearchParams();
   const [query, setQuery] = useState('');
   const [site, setSite] = useState('');
   const [reportType, setReportType] = useState('');
@@ -23,8 +33,31 @@ export function ReportsPage() {
   const [sortField, setSortField] = useState('day');
   const [sortDirection, setSortDirection] = useState('asc');
 
+  const dateRange = useMemo(() => getReportDateRange(week), [week]);
+
+  /**
+   * The dashboard's report tile still hands a specific report over as
+   * `?report=<id>`. With the detail drawer hidden there is nothing to open, so
+   * following that link lands on the list and marks the report read — the param
+   * is consumed immediately, so a refresh or a back gesture doesn't re-run it.
+   */
+  useEffect(() => {
+    const requested = searchParams.get('report');
+    if (!requested) return;
+    const match = reports.find((report) => report.id === requested);
+    if (match?.isNew) markReportRead(match.id);
+    setSearchParams({}, { replace: true });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchParams, reports]);
+
+  /* Narrowing the list can strand the reader on a page that no longer exists —
+     filter to one week from page 2 and the table comes back empty. */
+  useEffect(() => {
+    setPage(0);
+  }, [query, site, reportType, week]);
+
   const filteredReports = useMemo(() => {
-    let rows = [...mockReports];
+    let rows = [...reports];
 
     if (query.trim()) {
       const normalized = query.trim().toLowerCase();
@@ -45,6 +78,10 @@ export function ReportsPage() {
       rows = rows.filter((report) => report.reportType === reportType);
     }
 
+    if (dateRange) {
+      rows = rows.filter((report) => isReportInRange(report, dateRange));
+    }
+
     rows.sort((a, b) => {
       const aVal = a[sortField];
       const bVal = b[sortField];
@@ -54,7 +91,11 @@ export function ReportsPage() {
     });
 
     return rows;
-  }, [query, site, reportType, sortField, sortDirection]);
+  }, [reports, query, site, reportType, dateRange, sortField, sortDirection]);
+
+  /* The field states the applied window, or — with none applied — the span the
+     list actually covers, so it always describes what is on screen. */
+  const dateRangeLabel = formatDateRange(dateRange ?? getReportsSpan(filteredReports));
 
   const pagedReports = filteredReports.slice(page * ROWS_PER_PAGE, page * ROWS_PER_PAGE + ROWS_PER_PAGE);
   const total = filteredReports.length;
@@ -75,7 +116,14 @@ export function ReportsPage() {
   return (
     <PortalShell activeNav="reports">
       <Stack spacing={2.5}>
-        <PageHeader title="Reports" description="Site summaries and incident reports across your locations." />
+        <PageHeader
+          title="Reports"
+          description={
+            newCount > 0
+              ? `Site summaries and incident reports across your locations. ${newCount} unread.`
+              : 'Site summaries and incident reports across your locations.'
+          }
+        />
         <ReportsToolbar
           query={query}
           onQueryChange={setQuery}
@@ -85,6 +133,7 @@ export function ReportsPage() {
           onReportTypeChange={setReportType}
           week={week}
           onWeekChange={setWeek}
+          dateRangeLabel={dateRangeLabel}
         />
 
         <Box sx={{ pt: 0.5 }}>
@@ -100,6 +149,7 @@ export function ReportsPage() {
                 sortField={sortField}
                 sortDirection={sortDirection}
                 onSort={handleSort}
+                onDownload={downloadReport}
               />
 
               <Stack direction="row" alignItems="center" justifyContent="flex-end" spacing={1.25} sx={{ pt: 2 }}>

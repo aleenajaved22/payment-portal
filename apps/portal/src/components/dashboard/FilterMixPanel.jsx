@@ -3,6 +3,7 @@ import Stack from '@mui/material/Stack';
 import Typography from '@mui/material/Typography';
 import { useTheme } from '@mui/material/styles';
 import { CardHeading, GridCell } from './DashboardGrid';
+import { formatFilterUsageWindow } from '../../data/filterUsage';
 
 /**
  * Filters replaced, broken down by size — the one figure on this dashboard that
@@ -21,14 +22,19 @@ const BAR_HEIGHT = 18;
 export function FilterMixPanel({ mix, visits, flex = 1, last = false, sx }) {
   const theme = useTheme();
   const largest = mix.sizes.reduce((max, entry) => Math.max(max, entry.count), 0);
+  const windowLabel = formatFilterUsageWindow();
 
   return (
     <GridCell flex={flex} last={last} sx={{ display: 'flex', flexDirection: 'column', ...sx }}>
       {/* The total rides in the heading rather than sitting under it: the bars
           below already carry the detail, so a second full-size figure only
-          pushed them down. */}
+          pushed them down.
+          The sub-line answers the two questions "(y)" left open: what period,
+          and which one. CardHeading has carried a `sub` slot all along with
+          nothing using it. */}
       <CardHeading
-        title="Filters Replaced (y)"
+        title="Filters Replaced"
+        sub={`Last 12 months · ${windowLabel}`}
         action={
           mix.total > 0 ? (
             <Stack direction="row" alignItems="baseline" spacing={0.75}>
@@ -53,8 +59,8 @@ export function FilterMixPanel({ mix, visits, flex = 1, last = false, sx }) {
           <Typography sx={{ fontSize: 14, fontWeight: 600, color: theme.palette.textPrimary }}>
             No filters recorded
           </Typography>
-          <Typography sx={{ fontSize: 13, color: theme.palette.textSecondary3 }}>
-            Nothing has been replaced at this site yet.
+          <Typography sx={{ fontSize: 13, color: theme.palette.textSecondary2 }}>
+            Nothing was replaced between {windowLabel}.
           </Typography>
         </Stack>
       ) : (

@@ -22,6 +22,15 @@ const palette = {
   textAlerDisabled: text.alertDisabled,
   textSuccess: text.success,
   textWarning: text.warning,
+  /**
+   * Brand-coloured text that actually passes AA.
+   *
+   * `textBrand` (#2DA551) measures 3.18:1 on white and 2.93:1 on
+   * surfaceBrandSubtle — fine for a 24px heading, a failure for the 12–13px
+   * labels it was being used on. This is the existing status token, 5.6:1 on
+   * both, and is the one to reach for whenever brand-coloured text is small.
+   */
+  textBrandOnSubtle: semantic.status.onSubtle.success,
 
   borderSubtle1: border.subtle1,
   borderSubtle2: border.subtle2,

@@ -159,6 +159,7 @@ export function UserAccountMenu() {
               label="User Management"
               onClick={() => {
                 close();
+                navigate('/users');
               }}
             />
           </Stack>

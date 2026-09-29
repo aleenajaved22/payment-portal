@@ -35,6 +35,14 @@ export const mockReports = [
     reportType: 'Site Summary',
     ...reportDate(5),
     isNew: false,
+    /* Something the technician flagged on the day. Most visits have none, which
+       is why this sits on the record rather than being derived — an exception is
+       a fact about what happened, not a property of the report's id. */
+    exception: {
+      title: 'Airflow below target on RTU-3',
+      detail:
+        'Return-side restriction cleared and the filter replaced. Recommend a follow-up reading at the next scheduled visit.',
+    },
   },
   {
     id: '5',
@@ -54,4 +62,9 @@ export const mockReports = [
 
 export const siteFilterOptions = ['All sites', 'KFC Owen Tech', 'KFC Lakeview', 'KFC Fremont'];
 export const reportTypeFilterOptions = ['All types', 'Site Summary'];
-export const weekFilterOptions = ['This Week', 'Last Week', 'This Month'];
+/**
+ * FilterSelect treats the first option as the clear-all sentinel — it is the one
+ * that maps to an empty value. Without "All dates" leading, picking "This Week"
+ * would silently mean "no date filter", which is the opposite of what it says.
+ */
+export const weekFilterOptions = ['All dates', 'This Week', 'Last Week', 'This Month'];

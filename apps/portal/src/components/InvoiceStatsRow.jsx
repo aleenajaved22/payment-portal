@@ -236,7 +236,6 @@ export function InvoiceStatsSegmentRow({ segments, activeStatus = '', onSelectSt
         py: '22px',
         backgroundColor: theme.palette.surfaceWhite,
         borderTop: `1px solid ${theme.palette.borderSubtle1}`,
-        borderBottom: `1px solid ${theme.palette.borderSubtle1}`,
       }}
     >
       {/* Status metrics double as filters: clicking one scopes the invoice table

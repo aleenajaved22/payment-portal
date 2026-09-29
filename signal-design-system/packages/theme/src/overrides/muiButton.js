@@ -38,6 +38,14 @@ const MuiButton = ({ _palette }) => ({
           border: `1px solid ${primary.default}`,
           boxShadow: shadows.focusBrandSolidWithSoft,
         },
+        /* Keyboard focus gets the same ring the pressed state already
+           had a token for. Without this the primary button — the one that
+           commits a payment — has no visible focus at all (WCAG 2.4.7). */
+        '&:focus-visible': {
+          backgroundColor: primary.default,
+          border: `1px solid ${primary.default}`,
+          boxShadow: shadows.focusBrandSolidWithSoft,
+        },
 
         '&:disabled': {
           color: '#ffffff',
@@ -81,6 +89,15 @@ const MuiButton = ({ _palette }) => ({
         },
 
         '&:active': {
+          color: '#444446',
+          backgroundColor: 'white',
+          border: `1px solid #AEAEB2`,
+          boxShadow: `0px 0px 0px 4px #F2F4F7, 0px 1px 2px 0px rgba(16, 24, 40, 0.05)`,
+        },
+        /* Keyboard focus gets the same ring the pressed state already
+           had a token for. Without this the primary button — the one that
+           commits a payment — has no visible focus at all (WCAG 2.4.7). */
+        '&:focus-visible': {
           color: '#444446',
           backgroundColor: 'white',
           border: `1px solid #AEAEB2`,
@@ -140,6 +157,14 @@ const MuiButton = ({ _palette }) => ({
           backgroundColor: 'transparent',
           boxShadow: `none`,
         },
+        /* Keyboard focus gets the same ring the pressed state already
+           had a token for. Without this the primary button — the one that
+           commits a payment — has no visible focus at all (WCAG 2.4.7). */
+        '&:focus-visible': {
+          color: '#5B5B5F',
+          backgroundColor: 'transparent',
+          boxShadow: `none`,
+        },
 
         '&:disabled': {
           color: '#AEAEB2',
@@ -178,6 +203,14 @@ const MuiButton = ({ _palette }) => ({
         },
 
         '&:active': {
+          color: primary.default,
+          backgroundColor: 'transparent',
+          boxShadow: `none`,
+        },
+        /* Keyboard focus gets the same ring the pressed state already
+           had a token for. Without this the primary button — the one that
+           commits a payment — has no visible focus at all (WCAG 2.4.7). */
+        '&:focus-visible': {
           color: primary.default,
           backgroundColor: 'transparent',
           boxShadow: `none`,
@@ -222,6 +255,14 @@ const MuiButton = ({ _palette }) => ({
         },
 
         '&:active': {
+          backgroundColor: '#E43F32',
+          border: `1px solid #E43F32`,
+          boxShadow: ` 0px 0px 0px 4px #FEE4E2, 0px 1px 2px 0px rgba(16, 24, 40, 0.05)`,
+        },
+        /* Keyboard focus gets the same ring the pressed state already
+           had a token for. Without this the primary button — the one that
+           commits a payment — has no visible focus at all (WCAG 2.4.7). */
+        '&:focus-visible': {
           backgroundColor: '#E43F32',
           border: `1px solid #E43F32`,
           boxShadow: ` 0px 0px 0px 4px #FEE4E2, 0px 1px 2px 0px rgba(16, 24, 40, 0.05)`,
@@ -273,6 +314,14 @@ const MuiButton = ({ _palette }) => ({
           border: `1px solid #DF372B`,
           boxShadow: ` 0px 0px 0px 4px #FEE4E2, 0px 1px 2px 0px rgba(16, 24, 40, 0.05)`,
         },
+        /* Keyboard focus gets the same ring the pressed state already
+           had a token for. Without this the primary button — the one that
+           commits a payment — has no visible focus at all (WCAG 2.4.7). */
+        '&:focus-visible': {
+          backgroundColor: '#ffffff',
+          border: `1px solid #DF372B`,
+          boxShadow: ` 0px 0px 0px 4px #FEE4E2, 0px 1px 2px 0px rgba(16, 24, 40, 0.05)`,
+        },
 
         '&:disabled': {
           color: '#FECDCA',
@@ -316,6 +365,15 @@ const MuiButton = ({ _palette }) => ({
         },
 
         '&:active': {
+          color: primary.default,
+          backgroundColor: 'transparent',
+          border: `1px solid ${primary.default}`,
+          boxShadow: shadows.focusBrandSolid,
+        },
+        /* Keyboard focus gets the same ring the pressed state already
+           had a token for. Without this the primary button — the one that
+           commits a payment — has no visible focus at all (WCAG 2.4.7). */
+        '&:focus-visible': {
           color: primary.default,
           backgroundColor: 'transparent',
           border: `1px solid ${primary.default}`,

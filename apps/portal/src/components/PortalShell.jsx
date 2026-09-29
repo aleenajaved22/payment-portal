@@ -27,10 +27,15 @@ export function PortalShell({ activeNav = 'reports', banner, mainSx, children })
           borderBottom: `1px solid ${theme.palette.borderSubtle1}`,
         }}
       >
+        {/* Centred nav between logo and account from md up. Below that the three
+            tabs plus both ends are wider than a phone, so the row wraps and the
+            nav takes a line of its own rather than pushing the account menu off
+            the right edge. */}
         <Stack
           direction="row"
           alignItems="center"
           justifyContent="space-between"
+          flexWrap={{ xs: 'wrap', md: 'nowrap' }}
           sx={{ width: '100%', position: 'relative' }}
         >
           <Box sx={{ zIndex: 1 }}>
@@ -42,11 +47,21 @@ export function PortalShell({ activeNav = 'reports', banner, mainSx, children })
               position: { xs: 'static', md: 'absolute' },
               left: { md: '50%' },
               transform: { md: 'translateX(-50%)' },
-              mt: { xs: 1, md: 0 },
+              flexBasis: { xs: '100%', md: 'auto' },
+              minWidth: 0,
+              // Last in the wrapped order so the logo and the account menu keep
+              // each other company on the first line, and the nav takes the
+              // second — rather than the account being pushed onto a third.
+              order: { xs: 3, md: 0 },
+              mt: { xs: 1.25, md: 0 },
             }}
           >
             <Tabs
               value={activeNav}
+              // Scrollable so a fourth destination, or a longer label in
+              // translation, slides rather than spilling off the phone.
+              variant="scrollable"
+              scrollButtons={false}
               onChange={(_, value) => {
                 const item = NAV_ITEMS.find((nav) => nav.value === value);
                 if (item) navigate(item.path);
@@ -54,6 +69,7 @@ export function PortalShell({ activeNav = 'reports', banner, mainSx, children })
               sx={{
                 minHeight: 34,
                 '& .MuiTabs-flexContainer': { gap: 0.5 },
+                '& .MuiTabs-scroller': { overflowX: { xs: 'auto', md: 'visible' } },
                 '& .MuiTabs-indicator': { display: 'none' },
                 '& .MuiTab-root': {
                   minHeight: 34,

@@ -35,10 +35,12 @@ export function InvoicesTable({
   const bodyCellPy = 2;
   const checkboxColumnWidth = 64;
   const actionsColumnWidth = 70;
-  const dataColumnCount = 6;
+  // Filters sits between Contract and Amount: what the visit replaced, then
+  // what it cost.
+  const dataColumnCount = 7;
   const fixedColumnsWidth = checkboxColumnWidth + actionsColumnWidth;
   const equalDataColumnWidth = `calc((100% - ${fixedColumnsWidth}px) / ${dataColumnCount})`;
-  const tableMinWidth = 1100;
+  const tableMinWidth = 1200;
 
   const equalDataColumnSx = {
     width: equalDataColumnWidth,
@@ -55,6 +57,15 @@ export function InvoicesTable({
   const statusCellSx = {
     ...equalDataColumnSx,
     whiteSpace: 'nowrap',
+  };
+
+  /* A count, so it is tabular and ranged right — the eye compares the column
+     rather than reading each figure. */
+  const filtersCellSx = {
+    ...equalDataColumnSx,
+    whiteSpace: 'nowrap',
+    textAlign: 'right',
+    fontVariantNumeric: 'tabular-nums',
   };
   const isInvoiceSelectable = (invoice) => invoice.status !== 'Paid';
   const selectableInvoices = invoices.filter(isInvoiceSelectable);
@@ -299,6 +310,19 @@ export function InvoicesTable({
               </TableSortLabel>
             </TableCell>
             <TableCell
+              sx={{ ...headerCellSx, ...filtersCellSx }}
+              sortDirection={sortField === 'filterCount' ? sortDirection : false}
+            >
+              <TableSortLabel
+                active={sortField === 'filterCount'}
+                direction={sortField === 'filterCount' ? sortDirection : 'desc'}
+                onClick={() => onSort('filterCount')}
+                sx={sortLabelSx}
+              >
+                Filters
+              </TableSortLabel>
+            </TableCell>
+            <TableCell
               sx={{ ...headerCellSx, ...amountCellSx }}
               sortDirection={sortField === 'amount' ? sortDirection : false}
             >
@@ -394,6 +418,14 @@ export function InvoicesTable({
               </TableCell>
               <TableCell sx={{ verticalAlign: 'middle', ...equalDataColumnSx }}>
                 <ContractChip label={invoice.contract} />
+              </TableCell>
+              <TableCell sx={filtersCellSx}>
+                <Typography
+                  variant="body2"
+                  sx={{ ...secondaryCellTextSx, fontVariantNumeric: 'tabular-nums' }}
+                >
+                  {invoice.filterCount ?? '—'}
+                </Typography>
               </TableCell>
               <TableCell sx={amountCellSx}>
                 <Typography variant="body2" sx={secondaryCellTextSx}>

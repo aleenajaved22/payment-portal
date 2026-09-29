@@ -20,6 +20,7 @@ export function ReportsToolbar({
   onReportTypeChange,
   week,
   onWeekChange,
+  dateRangeLabel,
 }) {
   const theme = useTheme();
 
@@ -81,14 +82,19 @@ export function ReportsToolbar({
             onChange={onReportTypeChange}
             options={reportTypeFilterOptions}
           />
-          <FilterSelect label="This Week" value={week} onChange={onWeekChange} options={weekFilterOptions} />
+          {/* Labelled by what it filters, not by its first option — "This Week"
+              as the resting label read as an applied filter when none was. */}
+          <FilterSelect label="Date range" value={week} onChange={onWeekChange} options={weekFilterOptions} />
         </Stack>
       </Stack>
 
+      {/* Reads out the window actually in force — the select above sets it, and
+          with nothing selected it states the span of the reports on screen. */}
       <TextField
         variant="outlined"
         size="small"
-        value="01/14/2024 - 01/18/2024"
+        value={dateRangeLabel ?? ''}
+        inputProps={{ 'aria-label': 'Date range in view' }}
         InputProps={{
           readOnly: true,
           endAdornment: (

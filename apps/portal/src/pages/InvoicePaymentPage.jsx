@@ -13,13 +13,17 @@ import { InvoiceStatsRow, InvoiceStatsSegmentRow } from '../components/InvoiceSt
 import { InvoiceBoardList } from '../components/InvoiceBoardList';
 import { InvoicesToolbar } from '../components/InvoicesToolbar';
 import { EmptyState, InvoicesTable } from '../components/design-system';
+import { useInvoices } from '../context/InvoicesContext';
 import { usePaymentMethods } from '../context/PaymentMethodsContext';
+import { PaymentConfirmationToast } from '../components/PaymentConfirmationToast';
 import {
+  formatInvoiceTotal,
   getInvoiceDashboardCards,
   getInvoiceStatusSegmentStats,
   getPendingInvoices,
-  mockInvoices,
+  parseInvoiceAmount,
   parseInvoiceDate,
+  sumInvoiceAmounts,
 } from '../data/mockInvoices';
 
 const ROWS_PER_PAGE = 8;
@@ -48,7 +52,9 @@ export function InvoicePaymentPage() {
     }
   });
 
-  const { defaultMethod, payAtCheckout, syncFromStorage } = usePaymentMethods();
+  const { defaultMethod, defaultMethodId, methods, payAtCheckout, syncFromStorage } = usePaymentMethods();
+  const { invoices: allInvoices, markInvoicesPaid } = useInvoices();
+  const [lastPayment, setLastPayment] = useState(null);
 
   const openInvoicePreview = (invoice) => {
     setPreviewInvoice(invoice);
@@ -63,22 +69,24 @@ export function InvoicePaymentPage() {
   const beginPayment = (invoices) => {
     if (!invoices.length) return;
     syncFromStorage();
+    /* Clear the last confirmation as the next payment starts. It was only ever
+       cleared on dismissal, so opening checkout again and cancelling brought
+       back a toast describing a payment from several minutes earlier. */
+    setLastPayment(null);
     setInvoicesForPayment(invoices);
     setPayModalOpen(true);
   };
 
   const openPaymentModalFromToolbar = () => {
     beginPayment(
-      mockInvoices.filter(
-        (invoice) => selectedIds.includes(invoice.id) && invoice.status !== 'Paid',
-      ),
+      allInvoices.filter((invoice) => selectedIds.includes(invoice.id) && invoice.status !== 'Paid'),
     );
   };
 
-  const dashboardCards = useMemo(() => getInvoiceDashboardCards(mockInvoices), []);
-  const statusSegmentStats = useMemo(() => getInvoiceStatusSegmentStats(mockInvoices), []);
+  const dashboardCards = useMemo(() => getInvoiceDashboardCards(allInvoices), [allInvoices]);
+  const statusSegmentStats = useMemo(() => getInvoiceStatusSegmentStats(allInvoices), [allInvoices]);
   const isBoardLayout = statsLayout === 'board';
-  const pendingInvoices = useMemo(() => getPendingInvoices(mockInvoices), []);
+  const pendingInvoices = useMemo(() => getPendingInvoices(allInvoices), [allInvoices]);
   const openPaymentModalForInvoice = (invoice) => {
     if (invoice.status === 'Paid') return;
     beginPayment([invoice]);
@@ -89,7 +97,7 @@ export function InvoicePaymentPage() {
   }, [query, site, status]);
 
   const filteredInvoices = useMemo(() => {
-    let rows = [...mockInvoices];
+    let rows = [...allInvoices];
 
     if (query.trim()) {
       const normalized = query.trim().toLowerCase();
@@ -121,13 +129,21 @@ export function InvoicePaymentPage() {
         bVal = parseInvoiceDate(bVal)?.getTime() ?? 0;
       }
 
+      /* Amounts are strings like "$4,250.00", so comparing them directly sorts
+         them as text — "$980.00" lands above "$4,250.00" because "9" beats "4".
+         Noticed adding the Filters column beside it, which does sort numerically. */
+      if (sortField === 'amount') {
+        aVal = parseInvoiceAmount(aVal);
+        bVal = parseInvoiceAmount(bVal);
+      }
+
       if (aVal < bVal) return sortDirection === 'asc' ? -1 : 1;
       if (aVal > bVal) return sortDirection === 'asc' ? 1 : -1;
       return 0;
     });
 
     return rows;
-  }, [query, site, status, sortField, sortDirection]);
+  }, [allInvoices, query, site, status, sortField, sortDirection]);
 
   const pagedInvoices = filteredInvoices.slice(page * ROWS_PER_PAGE, page * ROWS_PER_PAGE + ROWS_PER_PAGE);
   const total = filteredInvoices.length;
@@ -271,8 +287,17 @@ export function InvoicePaymentPage() {
         onClose={() => setPayModalOpen(false)}
         invoices={invoicesForPayment}
         defaultTypeId={defaultMethod?.typeId}
+        savedMethods={methods}
+        defaultMethodId={defaultMethodId}
         onPayNow={(payload) => {
           payAtCheckout(payload);
+          const settled = markInvoicesPaid(invoicesForPayment.map((invoice) => invoice.id));
+          if (settled.length) {
+            setLastPayment({
+              amountLabel: formatInvoiceTotal(sumInvoiceAmounts(settled)),
+              invoiceCount: settled.length,
+            });
+          }
         }}
         onPaymentComplete={() => {
           setPayModalOpen(false);
@@ -287,6 +312,13 @@ export function InvoicePaymentPage() {
           closeInvoicePreview();
           openPaymentModalForInvoice(invoice);
         }}
+      />
+
+      <PaymentConfirmationToast
+        open={Boolean(lastPayment) && !payModalOpen}
+        amountLabel={lastPayment?.amountLabel}
+        invoiceCount={lastPayment?.invoiceCount ?? 0}
+        onClose={() => setLastPayment(null)}
       />
     </PortalShell>
   );

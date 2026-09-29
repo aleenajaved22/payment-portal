@@ -120,7 +120,9 @@ export function CardHeading({ title, sub, action }) {
           {title}
         </Typography>
         {sub ? (
-          <Typography sx={{ mt: '1px', fontSize: 13, lineHeight: '20px', color: theme.palette.textSecondary3 }}>
+          // secondary2, not secondary3: a sub-line that states a period or a
+          // scope is information, and secondary3 is 3.62:1 on white.
+          <Typography sx={{ mt: '1px', fontSize: 13, lineHeight: '20px', color: theme.palette.textSecondary2 }}>
             {sub}
           </Typography>
         ) : null}

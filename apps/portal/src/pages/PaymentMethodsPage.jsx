@@ -8,10 +8,15 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { PortalShell } from '../components/PortalShell';
 import { AddPaymentMethodModal } from '../components/AddPaymentMethodModal';
+import { ConfirmDialog } from '../components/ConfirmDialog';
 import { PaymentMethodListRow } from '../components/PaymentMethodListRow';
-import { Button, PageHeader } from '../components/design-system';
+import { Button, EmptyState, PageHeader } from '../components/design-system';
 import { usePaymentMethods } from '../context/PaymentMethodsContext';
-import { PAYMENT_METHOD_CATEGORIES, getPaymentMethodType } from '../data/paymentMethodCategories';
+import {
+  PAYMENT_METHOD_CATEGORIES,
+  getPaymentMethodShortLabel,
+  getPaymentMethodType,
+} from '../data/paymentMethodCategories';
 import { PAYMENT_METHOD_TYPES } from '../components/payment-method-logos';
 
 /**
@@ -44,11 +49,32 @@ function getEditFormValues(method) {
 export function PaymentMethodsPage() {
   const theme = useTheme();
   const navigate = useNavigate();
-  const { methods, defaultMethodId, addPaymentMethod, removePaymentMethod, updatePaymentMethod } =
-    usePaymentMethods();
+  const {
+    methods,
+    defaultMethodId,
+    addPaymentMethod,
+    removePaymentMethod,
+    setDefaultPaymentMethod,
+    updatePaymentMethod,
+  } = usePaymentMethods();
   const [addOpen, setAddOpen] = useState(false);
   const [addCategory, setAddCategory] = useState(null);
   const [editingMethod, setEditingMethod] = useState(null);
+  const [methodPendingRemoval, setMethodPendingRemoval] = useState(null);
+
+  /**
+   * What removing this method would cost, beyond the method itself. Removing the
+   * default hands the role to whatever the context would promote — the customer
+   * should read that before confirming, not discover it afterwards.
+   */
+  const removalConsequence = (() => {
+    if (!methodPendingRemoval) return null;
+    if (methodPendingRemoval.id !== defaultMethodId) return null;
+    const successor = methods.find((method) => method.id !== methodPendingRemoval.id);
+    return successor
+      ? `This is your default. ${getPaymentMethodShortLabel(successor)} will take over as the default.`
+      : 'This is your last saved method. Checkout will ask for full details until you add another.';
+  })();
 
   const openAddPaymentMethod = () => {
     setAddCategory(null);
@@ -70,7 +96,7 @@ export function PaymentMethodsPage() {
           onBack={() => navigate('/invoice-payment')}
           backLabel="Back to invoices"
           title="Card Management"
-          description="Saved payment methods for this account. Choose which one to use when you pay an invoice."
+          description="Saved payment methods for this account. The default is what checkout offers first."
           actions={
             <Button
               variant="primary"
@@ -83,6 +109,21 @@ export function PaymentMethodsPage() {
         />
 
         <Box>
+          {methods.length === 0 ? (
+            <EmptyState
+              title="No saved payment methods"
+              description="Add a card or bank account and checkout will offer it instead of asking for full details every time."
+            >
+              <Button
+                variant="primary"
+                onClick={openAddPaymentMethod}
+                startIcon={<AddIcon sx={{ fontSize: 18 }} />}
+                sx={{ mt: 3 }}
+              >
+                Add Payment method
+              </Button>
+            </EmptyState>
+          ) : null}
           {PAYMENT_METHOD_CATEGORIES.filter((category) =>
             methods.some((method) => method.typeId === category.typeId),
           ).map((category, categoryIndex) => {
@@ -116,8 +157,10 @@ export function PaymentMethodsPage() {
                       <PaymentMethodListRow
                         key={method.id}
                         method={method}
+                        isDefault={method.id === defaultMethodId}
                         onEdit={openEditPaymentMethod}
-                        onRemove={removePaymentMethod}
+                        onSetDefault={setDefaultPaymentMethod}
+                        onRemove={() => setMethodPendingRemoval(method)}
                         isFirst={index === 0}
                       />
                     ))}
@@ -128,6 +171,23 @@ export function PaymentMethodsPage() {
           })}
         </Box>
       </Stack>
+
+      <ConfirmDialog
+        open={Boolean(methodPendingRemoval)}
+        title={
+          methodPendingRemoval
+            ? `Remove ${getPaymentMethodShortLabel(methodPendingRemoval)}?`
+            : 'Remove payment method?'
+        }
+        description="It will no longer be offered at checkout. Invoices already paid with it are unaffected."
+        consequence={removalConsequence}
+        confirmLabel="Remove method"
+        onClose={() => setMethodPendingRemoval(null)}
+        onConfirm={() => {
+          removePaymentMethod(methodPendingRemoval.id);
+          setMethodPendingRemoval(null);
+        }}
+      />
 
       <AddPaymentMethodModal
         open={addOpen}

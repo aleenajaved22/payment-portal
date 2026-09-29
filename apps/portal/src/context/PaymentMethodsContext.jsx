@@ -8,6 +8,32 @@ function createMethodId() {
   return `pm_${Date.now()}_${Math.random().toString(36).slice(2, 9)}`;
 }
 
+/**
+ * Whether two sets of details describe the same instrument.
+ *
+ * Compared on what identifies the method to its provider, not on the whole
+ * record: a card re-entered with a different expiry is still that card, and the
+ * fields we deliberately never store (CVV, PayPal password) can't take part.
+ */
+function isSameMethod(typeId, a = {}, b = {}) {
+  const eq = (left, right) => Boolean(left) && String(left).toLowerCase() === String(right).toLowerCase();
+
+  switch (typeId) {
+    case 'credit-card':
+      return eq(a.last4, b.last4) && eq(a.brand, b.brand);
+    case 'ach':
+      return eq(a.accountLast4, b.accountLast4) && eq(a.routingNumber, b.routingNumber);
+    case 'paypal':
+      return eq(a.email, b.email);
+    case 'zelle':
+      return eq(a.contact, b.contact);
+    case 'venmo':
+      return eq(a.username, b.username);
+    default:
+      return false;
+  }
+}
+
 function buildStoredMethod(typeId, details) {
   const summary = buildPaymentMethodSummary(typeId, details);
   return {
@@ -46,10 +72,36 @@ export function PaymentMethodsProvider({ children }) {
 
   const payAtCheckout = useCallback(
     ({ existingMethodId, typeId, details }) => {
+      /* Paying with something already saved does not re-point the account's
+         default. Settling one invoice by bank transfer is not a decision to
+         stop using your card, and having the dashboard's Active Payment Method
+         change behind you because of it is exactly the kind of silent side
+         effect that makes people distrust a billing portal. */
       if (existingMethodId) {
-        if (!state.methods.some((method) => method.id === existingMethodId)) return null;
-        persist({ methods: state.methods, defaultMethodId: existingMethodId });
-        return state.methods.find((method) => method.id === existingMethodId) ?? null;
+        const existing = state.methods.find((method) => method.id === existingMethodId);
+        if (!existing) return null;
+        if (!state.defaultMethodId) persist({ ...state, defaultMethodId: existingMethodId });
+        return existing;
+      }
+
+      // Paying twice with the same card used to save it twice, so the account
+      // filled up with copies of one method — and, before checkout validated
+      // anything, with blank ones. Match on the identity the type is keyed by
+      // and reuse the existing record instead.
+      const existing = state.methods.find(
+        (method) => method.typeId === typeId && isSameMethod(typeId, method.details, details),
+      );
+      if (existing) {
+        // Refreshed rather than merely reused: the customer just re-keyed this
+        // card, so a changed name or a new expiry from a reissue is the current
+        // truth and should be what the account shows from now on.
+        const summary = buildPaymentMethodSummary(typeId, details);
+        const refreshed = { ...existing, details, label: summary.label, subtitle: summary.subtitle };
+        persist({
+          methods: state.methods.map((method) => (method.id === existing.id ? refreshed : method)),
+          defaultMethodId: existing.id,
+        });
+        return refreshed;
       }
 
       const primary = buildStoredMethod(typeId, details);
@@ -58,7 +110,9 @@ export function PaymentMethodsProvider({ children }) {
       persist({ methods, defaultMethodId: primary.id });
       return primary;
     },
-    [persist, state.methods],
+    // Reads state.defaultMethodId as well as state.methods now, so it depends on
+    // the whole slice rather than one field of it.
+    [persist, state],
   );
 
   const setDefaultPaymentMethod = useCallback(

@@ -1,7 +1,10 @@
 import { CssBaseline, ThemeProvider, createTheme } from '@mui/material';
 import { createSignalTheme } from '@signal/theme';
 import { AuthProvider } from './auth/AuthContext';
+import { InvoicesProvider } from './context/InvoicesContext';
 import { PaymentMethodsProvider } from './context/PaymentMethodsContext';
+import { ReportsProvider } from './context/ReportsContext';
+import { TeamProvider } from './context/TeamContext';
 
 const INTER_FONT = '"Inter", sans-serif';
 
@@ -40,7 +43,13 @@ export function AppProviders({ children }) {
     <ThemeProvider theme={theme}>
       <CssBaseline />
       <AuthProvider>
-        <PaymentMethodsProvider>{children}</PaymentMethodsProvider>
+        <PaymentMethodsProvider>
+          <InvoicesProvider>
+            <ReportsProvider>
+              <TeamProvider>{children}</TeamProvider>
+            </ReportsProvider>
+          </InvoicesProvider>
+        </PaymentMethodsProvider>
       </AuthProvider>
     </ThemeProvider>
   );

@@ -82,6 +82,19 @@ function issuedAgo(days) {
   return `${mm}/${dd}/${date.getFullYear()}`;
 }
 
+/**
+ * `filterCount` is how many filters that invoice covers.
+ *
+ * Explicit per invoice rather than divided out of the amount at render time: an
+ * invoice carries one figure and no line items, so a count derived by division
+ * would be a guess dressed as arithmetic. These sit at roughly $145 a filter
+ * installed, which is what makes them plausible against the amounts.
+ *
+ * They deliberately do not sum to the dashboard's "Filters Replaced" total —
+ * that figure covers twelve months of replacements across the estate, while
+ * this is thirteen invoices. When invoices itemise (size x quantity x unit
+ * price), this field is replaced by a sum over those lines.
+ */
 export const mockInvoices = [
   {
     id: '1',
@@ -93,6 +106,7 @@ export const mockInvoices = [
     dueDate: dueIn(6),
     invoiceDate: issuedAgo(24),
     paymentTerms: 'NET 10',
+    filterCount: 29,
   },
   {
     id: '2',
@@ -104,6 +118,7 @@ export const mockInvoices = [
     dueDate: dueIn(-40),
     invoiceDate: issuedAgo(70),
     paymentTerms: 'NET 10',
+    filterCount: 15,
   },
   {
     id: '3',
@@ -115,6 +130,7 @@ export const mockInvoices = [
     dueDate: dueIn(-34),
     invoiceDate: issuedAgo(64),
     paymentTerms: 'NET 10',
+    filterCount: 24,
   },
   {
     id: '4',
@@ -126,6 +142,7 @@ export const mockInvoices = [
     dueDate: dueIn(-61),
     invoiceDate: issuedAgo(91),
     paymentTerms: 'NET 10',
+    filterCount: 13,
   },
   {
     id: '5',
@@ -137,6 +154,7 @@ export const mockInvoices = [
     dueDate: dueIn(13),
     invoiceDate: issuedAgo(17),
     paymentTerms: 'NET 10',
+    filterCount: 35,
   },
   {
     id: '6',
@@ -148,6 +166,7 @@ export const mockInvoices = [
     dueDate: dueIn(-75),
     invoiceDate: issuedAgo(105),
     paymentTerms: 'NET 10',
+    filterCount: 18,
   },
   {
     id: '7',
@@ -159,6 +178,7 @@ export const mockInvoices = [
     dueDate: dueIn(-52),
     invoiceDate: issuedAgo(82),
     paymentTerms: 'NET 10',
+    filterCount: 7,
   },
   {
     id: '8',
@@ -170,6 +190,7 @@ export const mockInvoices = [
     dueDate: dueIn(21),
     invoiceDate: issuedAgo(9),
     paymentTerms: 'NET 10',
+    filterCount: 26,
   },
   {
     id: '9',
@@ -181,6 +202,7 @@ export const mockInvoices = [
     dueDate: dueIn(-21),
     invoiceDate: issuedAgo(51),
     paymentTerms: 'NET 10',
+    filterCount: 13,
   },
   {
     id: '10',
@@ -192,6 +214,7 @@ export const mockInvoices = [
     dueDate: dueIn(-12),
     invoiceDate: issuedAgo(42),
     paymentTerms: 'NET 10',
+    filterCount: 16,
   },
   {
     id: '11',
@@ -203,6 +226,7 @@ export const mockInvoices = [
     dueDate: dueIn(9),
     invoiceDate: issuedAgo(21),
     paymentTerms: 'NET 10',
+    filterCount: 20,
   },
   {
     id: '12',
@@ -214,6 +238,7 @@ export const mockInvoices = [
     dueDate: dueIn(17),
     invoiceDate: issuedAgo(13),
     paymentTerms: 'NET 10',
+    filterCount: 10,
   },
   {
     id: '13',
@@ -225,6 +250,7 @@ export const mockInvoices = [
     dueDate: dueIn(28),
     invoiceDate: issuedAgo(2),
     paymentTerms: 'NET 10',
+    filterCount: 22,
   },
 ];
 
