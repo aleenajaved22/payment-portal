@@ -3,6 +3,7 @@ import {
   getUnpaidInvoices,
   mockInvoices,
   parseInvoiceAmount,
+  formatMMDDYY,
   parseInvoiceDate,
   sumInvoicesByStatus,
 } from './mockInvoices';
@@ -159,5 +160,5 @@ export function formatPaidWhen(iso) {
   const days = Math.round((startOfToday.getTime() - thenDay.getTime()) / 86400000);
   if (days <= 0) return 'today';
   if (days === 1) return 'yesterday';
-  return then.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+  return formatMMDDYY(then);
 }

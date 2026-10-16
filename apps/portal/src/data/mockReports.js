@@ -1,3 +1,5 @@
+import { formatMMDDYY } from './mockInvoices';
+
 /**
  * Site reports, dated relative to today.
  *
@@ -6,6 +8,21 @@
  * whatever the day. Deriving them from the clock keeps "latest" honest, and
  * matches how mockInvoices and subscriptionMock already work.
  */
+const DAY_MS = 86400000;
+
+function startOfDay(date) {
+  const next = new Date(date);
+  next.setHours(0, 0, 0, 0);
+  return next;
+}
+
+function startOfWeek(date) {
+  const next = startOfDay(date);
+  const offset = (next.getDay() + 6) % 7;
+  next.setDate(next.getDate() - offset);
+  return next;
+}
+
 function daysAgo(days) {
   const date = new Date();
   date.setHours(0, 0, 0, 0);
@@ -17,54 +34,59 @@ function reportDate(days) {
   const date = daysAgo(days);
   return {
     day: date.toLocaleDateString('en-US', { weekday: 'long' }),
-    date: date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }),
+    date: formatMMDDYY(date),
   };
 }
 
-export const mockReports = [
-  {
-    id: '2',
-    site: 'KFC Owen Tech',
-    reportType: 'Site Summary',
-    ...reportDate(2),
-    isNew: true,
-  },
+/** Keeps six demo rows inside the current Mon–Sun week (Reports default: This Week). */
+function daysAgoForListingSlot(slot, total = 6) {
+  const today = startOfDay(new Date());
+  const weekStart = startOfWeek(today);
+  const maxDaysAgo = Math.round((today.getTime() - weekStart.getTime()) / DAY_MS);
+  const daysInWeekSoFar = maxDaysAgo + 1;
+  if (slot < daysInWeekSoFar) {
+    return maxDaysAgo - slot;
+  }
+  return slot % daysInWeekSoFar;
+}
+
+/** Franchise operator shown in the reports table Company column. */
+export const companyBySite = {
+  'KFC Owen Tech': 'KBP Brands',
+  'KFC Lakeview': 'KBP Brands',
+  'KFC Fremont': 'KBP Brands',
+};
+
+const REPORT_ROWS = [
+  { id: '2', site: 'KFC Owen Tech', isNew: true },
   {
     id: '3',
     site: 'KFC Lakeview',
-    reportType: 'Site Summary',
-    ...reportDate(5),
     isNew: false,
-    /* Something the technician flagged on the day. Most visits have none, which
-       is why this sits on the record rather than being derived — an exception is
-       a fact about what happened, not a property of the report's id. */
     exception: {
       title: 'Airflow below target on RTU-3',
       detail:
         'Return-side restriction cleared and the filter replaced. Recommend a follow-up reading at the next scheduled visit.',
     },
   },
-  {
-    id: '5',
-    site: 'KFC Fremont',
-    reportType: 'Site Summary',
-    ...reportDate(9),
-    isNew: false,
-  },
-  {
-    id: '7',
-    site: 'KFC Lakeview',
-    reportType: 'Site Summary',
-    ...reportDate(16),
-    isNew: false,
-  },
+  { id: '5', site: 'KFC Fremont', isNew: false },
+  { id: '7', site: 'KFC Lakeview', isNew: false },
+  { id: '8', site: 'KFC Owen Tech', isNew: false },
+  { id: '9', site: 'KFC Fremont', isNew: false },
 ];
 
+export const mockReports = REPORT_ROWS.map((row, index) => {
+  const { exception, ...rest } = row;
+  return {
+    ...rest,
+    company: companyBySite[row.site],
+    reportType: 'Visit Report',
+    ...reportDate(daysAgoForListingSlot(index, REPORT_ROWS.length)),
+    ...(exception ? { exception } : {}),
+  };
+});
+
 export const siteFilterOptions = ['All sites', 'KFC Owen Tech', 'KFC Lakeview', 'KFC Fremont'];
-export const reportTypeFilterOptions = ['All types', 'Site Summary'];
-/**
- * FilterSelect treats the first option as the clear-all sentinel — it is the one
- * that maps to an empty value. Without "All dates" leading, picking "This Week"
- * would silently mean "no date filter", which is the opposite of what it says.
- */
-export const weekFilterOptions = ['All dates', 'This Week', 'Last Week', 'This Month'];
+export const reportTypeFilterOptions = ['All types', 'Visit Report'];
+/** Date-range presets — always one is selected (default on Reports: This Week). */
+export const weekFilterOptions = ['This Week', 'Last Week', 'This Month'];

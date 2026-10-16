@@ -2,6 +2,7 @@ import Box from '@mui/material/Box';
 import IconButton from '@mui/material/IconButton';
 import { useTheme } from '@mui/material/styles';
 import CloseIcon from '@mui/icons-material/Close';
+import ArrowForwardIcon from '@mui/icons-material/ArrowForward';
 import { Button, Drawer } from './design-system';
 import { InvoiceDocumentPreview } from './InvoiceDocumentPreview';
 import { getInvoicePdfUrl } from '../data/invoiceDocumentMock';
@@ -85,7 +86,12 @@ export function InvoicePreviewDrawer({ open, invoice, onClose, onPayNow }) {
           Download Invoice
         </Button>
         {invoice && invoice.status !== 'Paid' ? (
-          <Button variant="primary" onClick={() => onPayNow?.(invoice)} sx={{ minWidth: 105 }}>
+          <Button
+            variant="primary"
+            onClick={() => onPayNow?.(invoice)}
+            endIcon={<ArrowForwardIcon sx={{ fontSize: 18 }} />}
+            sx={{ minWidth: 105, '& .MuiButton-endIcon': { ml: 0.75 } }}
+          >
             Pay now
           </Button>
         ) : null}

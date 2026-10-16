@@ -1,3 +1,5 @@
+import { formatMMDDYY } from './mockInvoices';
+
 /**
  * The people who can sign in to this account.
  *
@@ -54,6 +56,7 @@ export const mockUsers = [
     email: 'alina.morgan@example.com',
     roleId: 'admin',
     status: 'active',
+    addedAt: daysAgoIso(120),
     lastActiveAt: daysAgoIso(0),
   },
   {
@@ -62,6 +65,7 @@ export const mockUsers = [
     email: 'john.hairgrove@filtergo.com',
     roleId: 'billing',
     status: 'active',
+    addedAt: daysAgoIso(400),
     lastActiveAt: daysAgoIso(2),
   },
   {
@@ -70,6 +74,7 @@ export const mockUsers = [
     email: 'maria.chen@filtergo.com',
     roleId: 'viewer',
     status: 'active',
+    addedAt: daysAgoIso(90),
     lastActiveAt: daysAgoIso(11),
   },
   {
@@ -78,10 +83,43 @@ export const mockUsers = [
     email: 'rosie.padilla@filtergo.com',
     roleId: 'billing',
     status: 'invited',
+    addedAt: daysAgoIso(3),
     lastActiveAt: null,
     invitedAt: daysAgoIso(3),
   },
 ];
+
+/** When the user joined or was invited — MM/DD/YY. */
+export function formatUserAddedAt(user) {
+  const iso = user.addedAt ?? user.invitedAt ?? user.lastActiveAt;
+  return iso ? formatMMDDYY(iso) : '—';
+}
+
+/** Last sign-in — MM/DD/YY • HH:MM:SS (portal convention). */
+export function formatUserLastLogin(iso) {
+  if (!iso) return '—';
+  const date = new Date(iso);
+  if (Number.isNaN(date.getTime())) return '—';
+  const time = date.toLocaleTimeString('en-US', {
+    hour: '2-digit',
+    minute: '2-digit',
+    second: '2-digit',
+    hour12: false,
+  });
+  return `${formatMMDDYY(date)} • ${time}`;
+}
+
+export function getUserAddedTime(user) {
+  const iso = user.addedAt ?? user.invitedAt ?? user.lastActiveAt;
+  const parsed = iso ? new Date(iso) : null;
+  return parsed && !Number.isNaN(parsed.getTime()) ? parsed.getTime() : 0;
+}
+
+export function getUserLastLoginTime(user) {
+  if (!user.lastActiveAt) return 0;
+  const parsed = new Date(user.lastActiveAt);
+  return Number.isNaN(parsed.getTime()) ? 0 : parsed.getTime();
+}
 
 /** "Today", "Yesterday", "11 days ago" — relative reads better than a date here. */
 export function formatRelativeDay(iso) {
@@ -96,5 +134,5 @@ export function formatRelativeDay(iso) {
   if (days <= 0) return 'Today';
   if (days === 1) return 'Yesterday';
   if (days < 30) return `${days} days ago`;
-  return then.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+  return formatMMDDYY(then);
 }

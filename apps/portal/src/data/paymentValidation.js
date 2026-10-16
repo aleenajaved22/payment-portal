@@ -136,23 +136,6 @@ function validatePaypal(form) {
   return errors;
 }
 
-function validateZelle(form) {
-  const errors = {};
-  const contact = trimmed(form.contact);
-  if (!contact) errors.contact = 'Email or phone is required';
-  else if (!isEmail(contact) && !isPhone(contact)) errors.contact = 'Enter a valid email or mobile number';
-  return errors;
-}
-
-function validateVenmo(form) {
-  const errors = {};
-  if (!trimmed(form.username)) errors.username = 'Venmo username is required';
-  const phone = trimmed(form.phone);
-  if (!phone) errors.phone = 'Mobile number is required';
-  else if (!isPhone(phone)) errors.phone = 'Enter a valid mobile number';
-  return errors;
-}
-
 /**
  * Validate one method's form. Returns a `{ field: message }` map, empty when the
  * form is good. Credit card expiry reports against a single `expiry` key because
@@ -166,10 +149,6 @@ export function validatePaymentForm(typeId, form = {}, now = new Date()) {
       return validateAch(form);
     case 'paypal':
       return validatePaypal(form);
-    case 'zelle':
-      return validateZelle(form);
-    case 'venmo':
-      return validateVenmo(form);
     default:
       return {};
   }

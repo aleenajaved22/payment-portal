@@ -3,7 +3,7 @@ import Stack from '@mui/material/Stack';
 import Typography from '@mui/material/Typography';
 import { useTheme } from '@mui/material/styles';
 import { CardArrow, CardBand, DashboardCard } from './DashboardGrid';
-import { formatInvoiceTotal } from '../../data/mockInvoices';
+import { formatInvoiceTotal, formatMMDDYY } from '../../data/mockInvoices';
 
 /**
  * The glance row: the figures that answer "how am I doing" before the customer
@@ -38,7 +38,7 @@ function useTones() {
 
 function formatCardDate(value) {
   if (!(value instanceof Date) || Number.isNaN(value.getTime())) return null;
-  return value.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+  return formatMMDDYY(value);
 }
 
 function toPercent(ratio) {

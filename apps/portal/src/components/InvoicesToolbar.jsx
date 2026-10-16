@@ -56,13 +56,13 @@ export function InvoicesToolbar({
               minWidth: `${searchWidthCh}ch`,
               fontSize: 14,
               fontWeight: 500,
-            },
-            '& .MuiOutlinedInput-root .MuiInputBase-input::placeholder': {
-              fontSize: 14,
-              fontWeight: 500,
-              lineHeight: '20px',
-              color: '#6a6a70',
-              opacity: 1,
+              '&::placeholder': {
+                fontSize: 14,
+                fontWeight: 400,
+                lineHeight: '20px',
+                color: theme.palette.textPlaceholderField,
+                opacity: 1,
+              },
             },
             '& .MuiOutlinedInput-notchedOutline': {
               borderColor: theme.palette.borderSubtle2,

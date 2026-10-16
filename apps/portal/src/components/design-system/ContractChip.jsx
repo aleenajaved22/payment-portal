@@ -10,8 +10,8 @@ export function ContractChip({ label }) {
       size="small"
       sx={{
         height: 24,
-        maxWidth: '100%',
-        width: 'fit-content',
+        width: 'max-content',
+        maxWidth: 'none',
         pl: '10px !important',
         pr: '10px !important',
         py: '2px !important',
@@ -27,10 +27,7 @@ export function ContractChip({ label }) {
           pr: '0 !important',
           py: 0,
           whiteSpace: 'nowrap',
-          overflow: 'hidden',
-          textOverflow: 'ellipsis',
-          display: 'block',
-          maxWidth: 280,
+          overflow: 'visible',
         },
       }}
     />

@@ -7,7 +7,7 @@ import CloseIcon from '@mui/icons-material/Close';
 import LockOutlinedIcon from '@mui/icons-material/LockOutlined';
 import ReceiptLongOutlinedIcon from '@mui/icons-material/ReceiptLongOutlined';
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { formatInvoiceTotal, sumInvoiceAmounts } from '../data/mockInvoices';
+import { formatInvoiceTotal, formatMMDDYY, sumInvoiceAmounts } from '../data/mockInvoices';
 import { Button, Dialog } from './design-system';
 import { NEW_METHOD_VALUE } from './CheckoutSavedMethods';
 import { PayInvoicesFormPanel } from './PayInvoicesFormPanel';
@@ -484,7 +484,7 @@ export function PaymentMethodModal({
                       state, so the status belongs on it. */}
                   {isSuccess ? (
                     <Typography sx={{ mt: 1, fontSize: 12, fontWeight: 700, color: theme.palette.textBrandOnSubtle }}>
-                      Paid · {new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+                      Paid · {formatMMDDYY(new Date())}
                     </Typography>
                   ) : null}
                 </Box>

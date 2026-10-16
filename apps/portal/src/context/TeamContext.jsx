@@ -53,20 +53,25 @@ export function TeamProvider({ children }) {
         roleId: 'admin',
         status: 'active',
         lastActiveAt: session.loggedInAt ?? new Date().toISOString(),
+        addedAt: session.loggedInAt ?? new Date().toISOString(),
       },
       ...users,
     ];
   }, [session, users]);
 
-  const inviteUser = useCallback((email, roleLabel) => {
+  const inviteUser = useCallback((email, roleLabel, displayName, associations = {}) => {
+    const now = new Date().toISOString();
     const invited = {
       id: createUserId(),
-      name: nameFromEmail(email),
+      name: displayName?.trim() || nameFromEmail(email),
       email: email.trim(),
       roleId: getRoleIdFromLabel(roleLabel),
       status: 'invited',
       lastActiveAt: null,
-      invitedAt: new Date().toISOString(),
+      invitedAt: now,
+      addedAt: now,
+      franchises: associations.franchises ?? [],
+      sites: associations.sites ?? [],
     };
     setUsers((previous) => [...previous, invited]);
     return invited;
@@ -78,8 +83,39 @@ export function TeamProvider({ children }) {
     );
   }, []);
 
+  const updateUser = useCallback((userId, { name, roleId, franchises, sites }) => {
+    setUsers((previous) =>
+      previous.map((user) => {
+        if (user.id !== userId) return user;
+        return {
+          ...user,
+          name: name?.trim() || user.name,
+          roleId: roleId ?? user.roleId,
+          franchises: franchises ?? user.franchises ?? [],
+          sites: sites ?? user.sites ?? [],
+        };
+      }),
+    );
+  }, []);
+
   const removeUser = useCallback((userId) => {
     setUsers((previous) => previous.filter((user) => user.id !== userId));
+  }, []);
+
+  const setUserActive = useCallback((userId, active) => {
+    setUsers((previous) =>
+      previous.map((user) => {
+        if (user.id !== userId) return user;
+        if (!active) {
+          return { ...user, status: 'inactive' };
+        }
+        return {
+          ...user,
+          status: 'active',
+          lastActiveAt: user.lastActiveAt ?? new Date().toISOString(),
+        };
+      }),
+    );
   }, []);
 
   /**
@@ -102,8 +138,17 @@ export function TeamProvider({ children }) {
   );
 
   const value = useMemo(
-    () => ({ users: roster, inviteUser, changeUserRole, removeUser, isLastAdmin, emailInUse }),
-    [roster, inviteUser, changeUserRole, removeUser, isLastAdmin, emailInUse],
+    () => ({
+      users: roster,
+      inviteUser,
+      changeUserRole,
+      updateUser,
+      removeUser,
+      setUserActive,
+      isLastAdmin,
+      emailInUse,
+    }),
+    [roster, inviteUser, changeUserRole, updateUser, removeUser, setUserActive, isLastAdmin, emailInUse],
   );
 
   return <TeamContext.Provider value={value}>{children}</TeamContext.Provider>;

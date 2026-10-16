@@ -20,6 +20,7 @@ export {
 } from '@signal/ui';
 
 export { ContractChip } from './ContractChip';
+export { SiteNameChip } from './SiteNameChip';
 export { InvoiceIcon } from './InvoiceIcon';
 export { InvoiceStatusChip } from './InvoiceStatusChip';
 export { InvoicesTable } from './InvoicesTable';
@@ -28,4 +29,5 @@ export { PageHeader } from './PageHeader';
 export { ReportTypeChip } from './ReportTypeChip';
 export { ReportsTable } from './ReportsTable';
 export { StatusChip } from './StatusChip';
+export { UserRoleChip } from './UserRoleChip';
 export { SurfaceCard } from './SurfaceCard';

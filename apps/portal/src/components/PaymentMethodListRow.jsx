@@ -4,7 +4,6 @@ import Stack from '@mui/material/Stack';
 import Typography from '@mui/material/Typography';
 import { useTheme } from '@mui/material/styles';
 import DeleteOutlineIcon from '@mui/icons-material/DeleteOutline';
-import EditOutlinedIcon from '@mui/icons-material/EditOutlined';
 import StarBorderRoundedIcon from '@mui/icons-material/StarBorderRounded';
 import Tooltip from '@mui/material/Tooltip';
 import { getPaymentMethodRowDisplay, getPaymentMethodType } from '../data/paymentMethodCategories';
@@ -109,7 +108,6 @@ function RowAction({ label, icon, onClick }) {
 
 export function PaymentMethodListRow({
   method,
-  onEdit,
   onRemove,
   onSetDefault,
   isDefault = false,
@@ -204,11 +202,6 @@ export function PaymentMethodListRow({
               </span>
             </Tooltip>
           ) : null}
-          <RowAction
-            label={`Edit ${display.primary}`}
-            icon={<EditOutlinedIcon sx={{ fontSize: 18 }} />}
-            onClick={() => onEdit?.(method)}
-          />
           <RowAction
             label={`Remove ${display.primary}`}
             icon={<DeleteOutlineIcon sx={{ fontSize: 18 }} />}

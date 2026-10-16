@@ -1,3 +1,5 @@
+import { formatMMDDYY, parseInvoiceDate } from './mockInvoices';
+
 /**
  * The date-range filter behind the reports toolbar.
  *
@@ -61,17 +63,15 @@ export function getReportDateRange(option, now = new Date()) {
  */
 export function getReportsSpan(reports = []) {
   const times = reports
-    .map((report) => Date.parse(report.date))
-    .filter((time) => !Number.isNaN(time));
+    .map((report) => parseInvoiceDate(report.date)?.getTime())
+    .filter((time) => time != null && !Number.isNaN(time));
 
   if (times.length === 0) return null;
   return { from: new Date(Math.min(...times)), to: new Date(Math.max(...times)) };
 }
 
-const pad = (value) => String(value).padStart(2, '0');
-
 function formatDate(date) {
-  return `${pad(date.getMonth() + 1)}/${pad(date.getDate())}/${date.getFullYear()}`;
+  return formatMMDDYY(date);
 }
 
 export function formatDateRange(range) {
@@ -81,8 +81,8 @@ export function formatDateRange(range) {
 
 export function isReportInRange(report, range) {
   if (!range) return true;
-  const time = Date.parse(report.date);
-  if (Number.isNaN(time)) return true;
+  const time = parseInvoiceDate(report.date)?.getTime();
+  if (time == null || Number.isNaN(time)) return true;
   // `to` is a date at midnight; the day it names must count as inside.
   return time >= range.from.getTime() && time < range.to.getTime() + DAY_MS;
 }
@@ -97,6 +97,7 @@ export function downloadReport(report) {
   const body =
     `FilterGo — ${report.reportType}\n` +
     `Site: ${report.site}\n` +
+    (report.company ? `Company: ${report.company}\n` : '') +
     `Date: ${report.date}\n\n` +
     `This is a sample export for the customer portal demo.\n`;
 

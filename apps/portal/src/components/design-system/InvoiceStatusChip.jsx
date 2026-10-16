@@ -5,20 +5,27 @@ const STATUS_COLOR = {
   Paid: 'success',
   Pending: 'warning',
   Overdue: 'error',
+  'Payment Failed': 'error',
 };
 
 const STATUS_CHIP_SX = {
   height: 'auto',
   minHeight: 26,
+  width: 'max-content',
+  maxWidth: 'none',
+  flexShrink: 0,
   pl: '10px !important',
   pr: '10px !important',
   py: '4px !important',
   gap: 0,
+  textTransform: 'none',
   '& .MuiChip-label': {
     pl: '0 !important',
     pr: '0 !important',
     py: 0,
     margin: 0,
+    whiteSpace: 'nowrap',
+    overflow: 'visible',
   },
 };
 

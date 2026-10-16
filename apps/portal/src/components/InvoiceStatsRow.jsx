@@ -1,7 +1,7 @@
 import Box from '@mui/material/Box';
 import Stack from '@mui/material/Stack';
 import Typography from '@mui/material/Typography';
-import { useTheme } from '@mui/material/styles';
+import { alpha, useTheme } from '@mui/material/styles';
 import AccessTimeOutlinedIcon from '@mui/icons-material/AccessTimeOutlined';
 import ArticleOutlinedIcon from '@mui/icons-material/ArticleOutlined';
 import CheckCircleOutlineIcon from '@mui/icons-material/CheckCircleOutline';
@@ -145,79 +145,120 @@ export function InvoiceStatsRow({ cards, stackedLayout = false }) {
   );
 }
 
-function SegmentLegendItem({ segment, isActive, onSelect }) {
+function SegmentHaloIcon({ color }) {
+  const haloSize = 35;
+  const dotSize = 10;
+
+  return (
+    <Box
+      sx={{
+        width: haloSize,
+        height: haloSize,
+        minWidth: haloSize,
+        minHeight: haloSize,
+        flexShrink: 0,
+        aspectRatio: '1 / 1',
+        borderRadius: '50%',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        backgroundColor: alpha(color, 0.16),
+      }}
+    >
+      <Box
+        sx={{
+          width: dotSize,
+          height: dotSize,
+          minWidth: dotSize,
+          minHeight: dotSize,
+          flexShrink: 0,
+          borderRadius: '50%',
+          backgroundColor: color,
+        }}
+      />
+    </Box>
+  );
+}
+
+function SegmentStatCell({ segment, isActive, onSelect, showDivider }) {
   const theme = useTheme();
   const interactive = Boolean(onSelect);
   const countLabel = `${segment.count} ${segment.count === 1 ? 'invoice' : 'invoices'}`;
 
   return (
-    <Stack
+    <Box
       component={interactive ? 'button' : 'div'}
       type={interactive ? 'button' : undefined}
       onClick={interactive ? () => onSelect(segment.label) : undefined}
       aria-pressed={interactive ? isActive : undefined}
       aria-label={interactive ? `Filter by ${segment.label}: ${segment.amountLabel}, ${countLabel}` : undefined}
-      direction="row"
-      alignItems="center"
-      spacing={0.75}
       sx={{
-        minWidth: 0,
+        width: 'max-content',
+        maxWidth: '100%',
         flexShrink: 0,
-        textAlign: 'left',
+        boxSizing: 'border-box',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'flex-start',
         font: 'inherit',
-        p: '4px 6px',
-        ml: '-6px',
+        px: '32px',
+        py: '24px',
         border: 'none',
-        borderRadius: '6px',
-        backgroundColor: isActive ? theme.palette.surfaceGreySubtle : 'transparent',
+        backgroundColor: isActive ? theme.palette.surfaceGreySubtle : theme.palette.surfaceWhite,
+        borderRight: showDivider ? `1px solid ${theme.palette.borderSubtle1}` : 'none',
         cursor: interactive ? 'pointer' : 'default',
         transition: 'background-color 0.15s ease',
-        '&:hover': interactive ? { backgroundColor: theme.palette.surfaceGreySubtle } : undefined,
+        '&:hover': interactive
+          ? { backgroundColor: isActive ? theme.palette.surfaceGreySubtle : theme.palette.surfaceGreySubtle }
+          : undefined,
       }}
     >
-      {/* Centered on the whole two-line block (label + amount), not just the
-          label — the dot is this item's marker, not the eyebrow's. */}
-      <Box
-        sx={{
-          width: 9,
-          height: 9,
-          borderRadius: '50%',
-          backgroundColor: segment.dotColor,
-          flexShrink: 0,
-        }}
-      />
-      <Box sx={{ minWidth: 0 }}>
-        <Typography
-          sx={{
-            fontSize: 13,
-            fontWeight: 500,
-            lineHeight: '18px',
-            color: theme.palette.textSecondary2,
-          }}
-        >
-          {segment.label}
-        </Typography>
-        <Typography
-          sx={{
-            fontSize: 20,
-            fontWeight: 700,
-            lineHeight: '26px',
-            letterSpacing: '-0.01em',
-            fontVariantNumeric: 'tabular-nums',
-            mt: '2px',
-            color: theme.palette.textPrimary,
-          }}
-        >
-          {segment.amountLabel}
-          <Box
-            component="span"
-            sx={{ ml: '4px', fontSize: 13, fontWeight: 400, letterSpacing: 'normal', color: theme.palette.textSecondary3 }}
+      <Stack direction="row" spacing={1.5} alignItems="center" justifyContent="flex-start" sx={{ minWidth: 0, maxWidth: '100%' }}>
+        <SegmentHaloIcon color={segment.dotColor} />
+        <Stack alignItems="flex-start" sx={{ minWidth: 0, textAlign: 'left' }}>
+          <Typography
+            sx={{
+              fontSize: 14,
+              fontWeight: 500,
+              lineHeight: '20px',
+              color: theme.palette.textSecondary3,
+            }}
           >
-            · {countLabel}
-          </Box>
-        </Typography>
-      </Box>
-    </Stack>
+            {segment.label}
+          </Typography>
+          <Stack
+            direction="row"
+            alignItems="baseline"
+            justifyContent="flex-start"
+            spacing={1.25}
+            sx={{ mt: 0.75, flexWrap: 'wrap' }}
+          >
+            <Typography
+              sx={{
+                fontSize: 22,
+                fontWeight: 700,
+                lineHeight: '30px',
+                letterSpacing: '-0.01em',
+                fontVariantNumeric: 'tabular-nums',
+                color: theme.palette.textPrimary,
+              }}
+            >
+              {segment.amountLabel}
+            </Typography>
+            <Typography
+              sx={{
+                fontSize: 13,
+                fontWeight: 400,
+                lineHeight: '20px',
+                color: theme.palette.textSecondary3,
+              }}
+            >
+              {countLabel}
+            </Typography>
+          </Stack>
+        </Stack>
+      </Stack>
+    </Box>
   );
 }
 
@@ -231,25 +272,22 @@ export function InvoiceStatsSegmentRow({ segments, activeStatus = '', onSelectSt
   return (
     <Box
       sx={{
+        display: 'flex',
         width: '100%',
-        px: { xs: 2, md: '32px' },
-        py: '22px',
+        justifyContent: 'flex-start',
         backgroundColor: theme.palette.surfaceWhite,
-        borderTop: `1px solid ${theme.palette.borderSubtle1}`,
+        borderBottom: `1px solid ${theme.palette.borderSubtle1}`,
       }}
     >
-      {/* Status metrics double as filters: clicking one scopes the invoice table
-          to that status. */}
-      <Stack direction="row" spacing={6} sx={{ flexWrap: 'wrap', rowGap: 1.5 }}>
-        {segments.map((segment) => (
-          <SegmentLegendItem
-            key={segment.id}
-            segment={segment}
-            isActive={activeStatus === segment.label}
-            onSelect={handleSelect}
-          />
-        ))}
-      </Stack>
+      {segments.map((segment, index) => (
+        <SegmentStatCell
+          key={segment.id}
+          segment={segment}
+          isActive={activeStatus === segment.label}
+          onSelect={handleSelect}
+          showDivider={index < segments.length - 1}
+        />
+      ))}
     </Box>
   );
 }

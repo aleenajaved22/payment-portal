@@ -21,16 +21,6 @@ const SEED_METHODS = [
     typeId: 'paypal',
     details: { email: 'alina.morgan@example.com' },
   },
-  {
-    id: 'seed-zelle',
-    typeId: 'zelle',
-    details: { contact: 'alina.morgan@example.com', nickname: 'Primary Zelle' },
-  },
-  {
-    id: 'seed-venmo',
-    typeId: 'venmo',
-    details: { username: 'alinamorgan', phone: '(415) 555-0134' },
-  },
 ];
 
 export function getDefaultPaymentMethodsState() {

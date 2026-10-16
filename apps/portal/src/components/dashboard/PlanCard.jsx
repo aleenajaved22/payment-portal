@@ -5,6 +5,7 @@ import { useTheme } from '@mui/material/styles';
 import CheckRoundedIcon from '@mui/icons-material/CheckRounded';
 import CreditCardOutlinedIcon from '@mui/icons-material/CreditCardOutlined';
 import { PAGE_GUTTER } from './DashboardGrid';
+import { formatMMDDYY } from '../../data/mockInvoices';
 import { Button } from '../design-system';
 
 const DEEP_GREEN = '#05603a';
@@ -12,8 +13,8 @@ const ON_GREEN = 'rgba(255, 255, 255, 0.72)';
 const ON_GREEN_FAINT = 'rgba(255, 255, 255, 0.45)';
 
 const fmtMoney = (n) => new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(n);
-const fmtDay = (date) => date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
-const fmtLong = (date) => date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+const fmtDay = (date) => formatMMDDYY(date);
+const fmtLong = (date) => formatMMDDYY(date);
 
 /* ------------------------------------------------------------------ */
 /* Left face: the plan's identity — differs by contract type.          */

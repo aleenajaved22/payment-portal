@@ -284,34 +284,6 @@ export function PaymentMethodFormFields({ methodId, values = {}, errors = {}, on
         </Stack>
       );
 
-    case 'zelle':
-      return (
-        <Stack spacing={2.5} sx={formStackSx}>
-          <Box sx={twoColumnRowSx}>
-            <PaymentField label="Zelle email or phone" error={errors.contact}>
-              {field('contact', { placeholder: 'Email or mobile number' })}
-            </PaymentField>
-            <PaymentField label="Account nickname (optional)" error={errors.nickname}>
-              {field('nickname', { placeholder: 'e.g. Primary Zelle' })}
-            </PaymentField>
-          </Box>
-        </Stack>
-      );
-
-    case 'venmo':
-      return (
-        <Stack spacing={2.5} sx={formStackSx}>
-          <Box sx={twoColumnRowSx}>
-            <PaymentField label="Venmo username" error={errors.username}>
-              {field('username', { placeholder: '@username' })}
-            </PaymentField>
-            <PaymentField label="Mobile number" error={errors.phone}>
-              {field('phone', { placeholder: '(555) 123-4567', inputProps: { inputMode: 'tel', autoComplete: 'tel' } })}
-            </PaymentField>
-          </Box>
-        </Stack>
-      );
-
     default:
       return null;
   }

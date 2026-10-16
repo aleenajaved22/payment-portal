@@ -5,6 +5,7 @@ const SEGMENT_BAR_FILL = {
   paid: semantic.surface.successStrong,
   pending: semantic.surface.warningStrong,
   overdue: semantic.surface.alertStrong,
+  paymentFailed: semantic.border.formError,
 };
 const DASHBOARD_STAT_THEME = {
   total: {
@@ -74,12 +75,12 @@ function dueIn(days) {
   return `${mm}/${dd}/${String(date.getFullYear()).slice(-2)}`;
 }
 
-/** 'MM/DD/YYYY' — issue dates carry the full year. */
+/** 'MM/DD/YY' — same display format as due dates across the portal. */
 function issuedAgo(days) {
   const date = shiftDays(-days);
   const mm = String(date.getMonth() + 1).padStart(2, '0');
   const dd = String(date.getDate()).padStart(2, '0');
-  return `${mm}/${dd}/${date.getFullYear()}`;
+  return `${mm}/${dd}/${String(date.getFullYear()).slice(-2)}`;
 }
 
 /**
@@ -95,7 +96,13 @@ function issuedAgo(days) {
  * this is thirteen invoices. When invoices itemise (size x quantity x unit
  * price), this field is replaced by a sum over those lines.
  */
-export const mockInvoices = [
+export const invoiceCompanyBySite = {
+  'KFC Owen Tech': 'KBP Brands',
+  'KFC Lakeview': 'KBP Brands',
+  'KFC Fremont': 'KBP Brands',
+};
+
+const mockInvoiceRows = [
   {
     id: '1',
     invoiceNumber: 'INV-10482',
@@ -233,7 +240,7 @@ export const mockInvoices = [
     invoiceNumber: 'INV-10485',
     site: 'KFC Fremont',
     amount: '$1,450.00',
-    status: 'Pending',
+    status: 'Payment Failed',
     contract: 'Contract Q1-2024',
     dueDate: dueIn(17),
     invoiceDate: issuedAgo(13),
@@ -254,6 +261,11 @@ export const mockInvoices = [
   },
 ];
 
+export const mockInvoices = mockInvoiceRows.map((invoice) => ({
+  ...invoice,
+  company: invoiceCompanyBySite[invoice.site] ?? '—',
+}));
+
 export function getUniqueInvoiceSites(invoices = mockInvoices) {
   const seen = new Set();
   const sites = [];
@@ -267,7 +279,7 @@ export function getUniqueInvoiceSites(invoices = mockInvoices) {
 }
 
 export const invoiceSiteFilterOptions = ['All sites', ...getUniqueInvoiceSites()];
-export const invoiceStatusFilterOptions = ['All statuses', 'Paid', 'Pending', 'Overdue'];
+export const invoiceStatusFilterOptions = ['All statuses', 'Paid', 'Pending', 'Overdue', 'Payment Failed'];
 
 export function filterInvoicesByStatus(invoices, status) {
   if (!status) return invoices;
@@ -337,14 +349,27 @@ export function parseInvoiceDate(value) {
   return Number.isNaN(parsed.getTime()) ? null : parsed;
 }
 
-/** Display due dates as MM/DD/YY in tables and detail views. */
-export function formatInvoiceDueDate(value) {
-  const parsed = parseInvoiceDate(value);
-  if (!parsed) return value ?? '';
+/** Display calendar dates as MM/DD/YY (Date instance or parseable string). */
+export function formatMMDDYY(value) {
+  if (value == null || value === '') return '';
+  const parsed =
+    value instanceof Date
+      ? Number.isNaN(value.getTime())
+        ? null
+        : value
+      : parseInvoiceDate(value);
+  if (!parsed) return typeof value === 'string' ? value : '';
   const mm = String(parsed.getMonth() + 1).padStart(2, '0');
   const dd = String(parsed.getDate()).padStart(2, '0');
   const yy = String(parsed.getFullYear()).slice(-2);
   return `${mm}/${dd}/${yy}`;
+}
+
+/** Display due dates as MM/DD/YY in tables and detail views. */
+export function formatInvoiceDueDate(value) {
+  if (value == null || value === '') return value ?? '';
+  const formatted = formatMMDDYY(value);
+  return formatted || (value ?? '');
 }
 
 export function formatInvoiceTotal(value) {
@@ -432,6 +457,12 @@ export function getInvoiceStatusSegmentStats(invoices = mockInvoices) {
       label: 'Overdue',
       barColor: SEGMENT_BAR_FILL.overdue,
       dotColor: SEGMENT_BAR_FILL.overdue,
+    },
+    {
+      id: 'payment-failed',
+      label: 'Payment Failed',
+      barColor: SEGMENT_BAR_FILL.paymentFailed,
+      dotColor: SEGMENT_BAR_FILL.paymentFailed,
     },
     {
       id: 'pending',

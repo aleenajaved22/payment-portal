@@ -5,7 +5,7 @@ import Typography from '@mui/material/Typography';
 import { useTheme } from '@mui/material/styles';
 import AccountBalanceOutlinedIcon from '@mui/icons-material/AccountBalanceOutlined';
 import { PaymentMethodLogoIcon } from '../payment-method-logos';
-import { PaypalLogo, VenmoLogo, ZelleLogo } from '../payment-method-logos';
+import { PaypalLogo } from '../payment-method-logos';
 
 /**
  * The active payment method, drawn as the thing it actually is.
@@ -33,9 +33,9 @@ import { PaypalLogo, VenmoLogo, ZelleLogo } from '../payment-method-logos';
  *   credit card   the card, because that is what is in the wallet
  *   bank account  a cheque, because the routing and account numbers people type
  *                 are the ones they read off the bottom of one
- *   wallets       the brand's own colour, because PayPal, Zelle and Venmo are
- *                 accounts rather than objects, and the brand is the whole of
- *                 how they are recognised
+ *   wallets       the brand's own colour, because PayPal is an account rather
+ *                 than an object, and the brand is the whole of how it is
+ *                 recognised
  *
  * Contrast: the wallet faces put white on deep brand colour and the cheque puts
  * near-black on paper, so all four new faces clear AA comfortably. The card's
@@ -437,38 +437,9 @@ const WALLETS = {
     base: '#012169',
     bloom: 'rgba(0, 156, 222, 0.62)',
     Logo: PaypalLogo,
-    /* Each mark is drawn to a different share of its 32-unit box — PayPal's
-       double-P is short and wide, Zelle's Z fills the square, Venmo's flourish
-       is a thin diagonal. Without a per-brand scale they come out at three
-       different optical sizes in the same tile. */
     logoScale: 1.6,
     hero: (details) => details.email || 'PayPal',
     footer: () => [{ label: 'Wallet', value: 'Connected', dot: true }],
-  },
-  zelle: {
-    type: 'ZELLE',
-    base: '#5312A8',
-    bloom: 'rgba(146, 84, 232, 0.66)',
-    Logo: ZelleLogo,
-    logoScale: 1,
-    hero: (details) => details.contact || 'Zelle',
-    footer: (details) => [
-      { label: 'Nickname', value: details.nickname },
-      { label: 'Sends to', value: details.contact?.includes('@') ? 'Email' : 'Mobile' },
-    ],
-  },
-  venmo: {
-    type: 'VENMO',
-    base: '#0A5FC0',
-    bloom: 'rgba(0, 140, 255, 0.66)',
-    Logo: VenmoLogo,
-    logoScale: 1.5,
-    hero: (details) => {
-      const username = details.username?.trim();
-      if (!username) return 'Venmo';
-      return username.startsWith('@') ? username : `@${username}`;
-    },
-    footer: (details) => [{ label: 'Mobile', value: details.phone }],
   },
 };
 

@@ -84,7 +84,13 @@ export function ReportsToolbar({
           />
           {/* Labelled by what it filters, not by its first option — "This Week"
               as the resting label read as an applied filter when none was. */}
-          <FilterSelect label="Date range" value={week} onChange={onWeekChange} options={weekFilterOptions} />
+          <FilterSelect
+            label="Date range"
+            value={week}
+            onChange={onWeekChange}
+            options={weekFilterOptions}
+            clearFirstOption={false}
+          />
         </Stack>
       </Stack>
 

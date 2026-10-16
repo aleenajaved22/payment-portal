@@ -9,8 +9,9 @@ import { useEffect, useMemo, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { PortalShell } from '../components/PortalShell';
 import { ReportsToolbar } from '../components/ReportsToolbar';
-import { EmptyState, PageHeader, ReportsTable } from '../components/design-system';
+import { EmptyState, ReportsTable } from '../components/design-system';
 import { useReports } from '../context/ReportsContext';
+import { parseInvoiceDate } from '../data/mockInvoices';
 import {
   downloadReport,
   formatDateRange,
@@ -23,12 +24,12 @@ const ROWS_PER_PAGE = 8;
 
 export function ReportsPage() {
   const theme = useTheme();
-  const { reports, newCount, markReportRead } = useReports();
+  const { reports, markReportRead } = useReports();
   const [searchParams, setSearchParams] = useSearchParams();
   const [query, setQuery] = useState('');
   const [site, setSite] = useState('');
   const [reportType, setReportType] = useState('');
-  const [week, setWeek] = useState('');
+  const [week, setWeek] = useState('This Week');
   const [page, setPage] = useState(0);
   const [sortField, setSortField] = useState('day');
   const [sortDirection, setSortDirection] = useState('asc');
@@ -64,6 +65,7 @@ export function ReportsPage() {
       rows = rows.filter(
         (report) =>
           report.site.toLowerCase().includes(normalized) ||
+          (report.company ?? '').toLowerCase().includes(normalized) ||
           report.reportType.toLowerCase().includes(normalized) ||
           report.day.toLowerCase().includes(normalized) ||
           report.date.toLowerCase().includes(normalized),
@@ -83,8 +85,15 @@ export function ReportsPage() {
     }
 
     rows.sort((a, b) => {
-      const aVal = a[sortField];
-      const bVal = b[sortField];
+      if (a.isNew !== b.isNew) {
+        return a.isNew ? -1 : 1;
+      }
+      let aVal = a[sortField];
+      let bVal = b[sortField];
+      if (sortField === 'date') {
+        aVal = parseInvoiceDate(aVal)?.getTime() ?? 0;
+        bVal = parseInvoiceDate(bVal)?.getTime() ?? 0;
+      }
       if (aVal < bVal) return sortDirection === 'asc' ? -1 : 1;
       if (aVal > bVal) return sortDirection === 'asc' ? 1 : -1;
       return 0;
@@ -116,14 +125,6 @@ export function ReportsPage() {
   return (
     <PortalShell activeNav="reports">
       <Stack spacing={2.5}>
-        <PageHeader
-          title="Reports"
-          description={
-            newCount > 0
-              ? `Site summaries and incident reports across your locations. ${newCount} unread.`
-              : 'Site summaries and incident reports across your locations.'
-          }
-        />
         <ReportsToolbar
           query={query}
           onQueryChange={setQuery}

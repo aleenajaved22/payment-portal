@@ -1,4 +1,4 @@
-import { billToBySite, formatInvoiceTotal, parseInvoiceAmount } from './mockInvoices';
+import { billToBySite, formatInvoiceTotal, formatMMDDYY, parseInvoiceAmount } from './mockInvoices';
 
 const COMPANY_LINES = [
   'Filtergo, LLC',
@@ -14,23 +14,14 @@ const TAX_RATE = 0.07;
 
 function formatShortDate(dateStr) {
   if (!dateStr) return '—';
-  const parsed = new Date(dateStr);
-  if (!Number.isNaN(parsed.getTime())) {
-    return parsed.toLocaleDateString('en-US', { month: '2-digit', day: '2-digit', year: 'numeric' });
-  }
-  return dateStr;
+  const formatted = formatMMDDYY(dateStr);
+  return formatted || dateStr;
 }
 
 function formatServiceDateCompact(dateStr) {
   if (!dateStr) return '—';
-  const parsed = new Date(dateStr);
-  if (!Number.isNaN(parsed.getTime())) {
-    const month = parsed.getMonth() + 1;
-    const day = parsed.getDate();
-    const year = String(parsed.getFullYear()).slice(-2);
-    return `${month}.${day}.${year}`;
-  }
-  return dateStr.replace(/\//g, '.');
+  const formatted = formatMMDDYY(dateStr);
+  return formatted || dateStr;
 }
 
 function buildBillToLines(invoice) {
@@ -118,8 +109,8 @@ export function getPaidInvoiceDocument(invoice) {
     companyLines: COMPANY_LINES,
     billToLines: buildBillToLines(invoice),
     invoiceNumber: invoice?.invoiceNumber?.replace(/^INV-/i, 'US_') ?? (isPaid ? 'US_209867' : 'US_210209'),
-    invoiceDate: formatShortDate(invoice?.invoiceDate) ?? (isPaid ? '09/04/2026' : '09/11/2026'),
-    dueDate: formatShortDate(invoice?.dueDate) ?? (isPaid ? '09/04/2026' : '10/11/2026'),
+    invoiceDate: formatShortDate(invoice?.invoiceDate) ?? (isPaid ? '09/04/26' : '09/11/26'),
+    dueDate: formatShortDate(invoice?.dueDate) ?? (isPaid ? '09/04/26' : '10/11/26'),
     salesRep: SALES_REP,
     showSalesRep: isPaid,
     showViewAndPay: !isPaid,

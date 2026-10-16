@@ -105,6 +105,7 @@ export function InvoicePaymentPage() {
         (invoice) =>
           invoice.invoiceNumber.toLowerCase().includes(normalized) ||
           invoice.site.toLowerCase().includes(normalized) ||
+          (invoice.company ?? '').toLowerCase().includes(normalized) ||
           invoice.amount.toLowerCase().includes(normalized) ||
           invoice.status.toLowerCase().includes(normalized) ||
           invoice.contract.toLowerCase().includes(normalized) ||
@@ -178,9 +179,9 @@ export function InvoicePaymentPage() {
   };
 
   return (
-    <PortalShell activeNav="invoice-payment" mainSx={{ pl: 0, pt: 0 }}>
-      <Stack spacing={2.5}>
-        <Box sx={{ mr: '-32px', width: 'calc(100% + 32px)' }}>
+    <PortalShell activeNav="invoice-payment" mainSx={{ px: 0, pt: 0 }}>
+      <Stack spacing={2.5} sx={{ width: '100%' }}>
+        <Box sx={{ width: '100%' }}>
           {isBoardLayout ? (
             <InvoiceStatsRow cards={dashboardCards} stackedLayout />
           ) : (
@@ -192,27 +193,29 @@ export function InvoicePaymentPage() {
           )}
         </Box>
 
-        <Box sx={{ pl: '32px' }}>
-          <Stack spacing={2.5}>
-            <InvoicesToolbar
-              query={query}
-              onQueryChange={setQuery}
-              site={site}
-              onSiteChange={setSite}
-              status={status}
-              onStatusChange={setStatus}
-              showPayNow={selectedIds.length > 0}
-              onPayNow={openPaymentModalFromToolbar}
-            />
+        <Box sx={{ px: '32px', width: '100%', boxSizing: 'border-box' }}>
+          <InvoicesToolbar
+            query={query}
+            onQueryChange={setQuery}
+            site={site}
+            onSiteChange={setSite}
+            status={status}
+            onStatusChange={setStatus}
+            showPayNow={selectedIds.length > 0}
+            onPayNow={openPaymentModalFromToolbar}
+          />
+        </Box>
 
-            <Box
-              sx={{
-                pt: 0.5,
-                maxHeight: isBoardLayout ? 'none' : 'calc(100vh - 280px)',
-                overflowY: isBoardLayout ? 'visible' : 'auto',
-                overflowX: 'hidden',
-              }}
-            >
+        <Box
+          sx={{
+            width: '100%',
+            pt: 0.5,
+            maxHeight: isBoardLayout ? 'none' : 'calc(100vh - 280px)',
+            overflowY: isBoardLayout ? 'visible' : 'auto',
+            overflowX: 'hidden',
+            boxSizing: 'border-box',
+          }}
+        >
               {filteredInvoices.length === 0 ? (
                 <EmptyState
                   title="No invoices found"
@@ -240,7 +243,13 @@ export function InvoicePaymentPage() {
                     onPayInvoice={openPaymentModalForInvoice}
                   />
 
-                  <Stack direction="row" alignItems="center" justifyContent="flex-end" spacing={1.25} sx={{ pt: 2 }}>
+                  <Stack
+                    direction="row"
+                    alignItems="center"
+                    justifyContent="flex-end"
+                    spacing={1.25}
+                    sx={{ pt: 2, px: '32px', boxSizing: 'border-box' }}
+                  >
                     <Typography variant="body2" sx={{ color: theme.palette.textSecondary2, fontSize: 14 }}>
                       {from}-{to} of {total}
                     </Typography>
@@ -277,8 +286,6 @@ export function InvoicePaymentPage() {
                   </Stack>
                 </>
               )}
-            </Box>
-          </Stack>
         </Box>
       </Stack>
 

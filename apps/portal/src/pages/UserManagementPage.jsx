@@ -1,38 +1,52 @@
 import Avatar from '@mui/material/Avatar';
 import Box from '@mui/material/Box';
 import IconButton from '@mui/material/IconButton';
-import MenuItem from '@mui/material/MenuItem';
+import InputAdornment from '@mui/material/InputAdornment';
 import Stack from '@mui/material/Stack';
+import Switch from '@mui/material/Switch';
+import Table from '@mui/material/Table';
+import TableBody from '@mui/material/TableBody';
+import TableCell from '@mui/material/TableCell';
+import TableContainer from '@mui/material/TableContainer';
+import TableHead from '@mui/material/TableHead';
+import TableRow from '@mui/material/TableRow';
+import TableSortLabel from '@mui/material/TableSortLabel';
 import Tooltip from '@mui/material/Tooltip';
 import Typography from '@mui/material/Typography';
-import { useTheme } from '@mui/material/styles';
-import DeleteOutlineIcon from '@mui/icons-material/DeleteOutline';
-import PersonAddAltOutlinedIcon from '@mui/icons-material/PersonAddAltOutlined';
-import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { alpha, useTheme } from '@mui/material/styles';
+import { primitive } from '@signal/design-tokens/colors';
+import AddIcon from '@mui/icons-material/Add';
+import ChevronLeftIcon from '@mui/icons-material/ChevronLeft';
+import ChevronRightIcon from '@mui/icons-material/ChevronRight';
+import EditOutlinedIcon from '@mui/icons-material/EditOutlined';
+import SearchRoundedIcon from '@mui/icons-material/SearchRounded';
+import { useEffect, useMemo, useState } from 'react';
 import { PortalShell } from '../components/PortalShell';
-import { ConfirmDialog } from '../components/ConfirmDialog';
-import { InviteUserDialog } from '../components/InviteUserDialog';
-import { Button, PageHeader, Select } from '../components/design-system';
+import { InactivateUserDialog } from '../components/InactivateUserDialog';
+import { EditUserDrawer } from '../components/EditUserDrawer';
+import { InviteUserDrawer } from '../components/InviteUserDrawer';
+import { UserDetailDrawer } from '../components/UserDetailDrawer';
+import { Button, EmptyState, Search, UserRoleChip } from '../components/design-system';
 import { useAuth } from '../auth/AuthContext';
 import { useTeam } from '../context/TeamContext';
-import { USER_ROLES, formatRelativeDay, getRole, getRoleIdFromLabel } from '../data/mockUsers';
+import {
+  formatUserAddedAt,
+  formatUserLastLogin,
+  getRole,
+  getUserAddedTime,
+  getUserLastLoginTime,
+} from '../data/mockUsers';
 
-/**
- * Who can sign in, and what each of them is allowed to do.
- *
- * "User Management" sat in the account menu doing nothing but closing the menu.
- * This is the page it was pointing at.
- *
- * Built from the same listing primitives as Card Management — a hairline between
- * rows, no surrounding container, the destructive action a ghost that appears on
- * hover — because both pages answer the same kind of question ("what is attached
- * to this account, and can I change it"). Role is an inline control rather than
- * a trip to an edit screen: it is the one field anyone actually changes, and
- * making it a two-step flow would be the only reason to leave this page.
- */
+const ROWS_PER_PAGE = 15;
+const CELL_PADDING_X = '24px';
+/** Matches InvoicesTable: bodyCellPy 2 + 14px/1.43 line (~52px total). */
+const BODY_ROW_HEIGHT = 52;
+const AVATAR_SIZE = 28;
+/** Ghost edit control at the row’s trailing edge (matches payment-method row actions). */
+const ROW_EDIT_ACTION_WIDTH = 30;
+/** 30px control + 24px right inset (aligns with table gutter). */
+const ROW_EDIT_CELL_WIDTH = 62;
 
-/** Initials, for the seeded users who have no avatar image. */
 function initialsOf(name) {
   return name
     .split(/\s+/)
@@ -42,305 +56,480 @@ function initialsOf(name) {
     .join('');
 }
 
-/** Invited-but-not-yet-joined is a real state and reads as one. */
-function PendingPill() {
-  const theme = useTheme();
-  return (
-    <Box
-      component="span"
-      sx={{
-        flexShrink: 0,
-        px: '8px',
-        py: '1px',
-        borderRadius: '999px',
-        fontSize: 10,
-        fontWeight: 600,
-        letterSpacing: '0.04em',
-        textTransform: 'uppercase',
-        color: theme.palette.textSecondary2,
-        backgroundColor: theme.palette.surfaceGreySubtle,
-      }}
-    >
-      Invited
-    </Box>
-  );
+function sortUsers(rows, sortField, sortDirection) {
+  const dir = sortDirection === 'asc' ? 1 : -1;
+  return [...rows].sort((a, b) => {
+    let aVal;
+    let bVal;
+    switch (sortField) {
+      case 'email':
+        aVal = a.email.toLowerCase();
+        bVal = b.email.toLowerCase();
+        break;
+      case 'addedAt':
+        aVal = getUserAddedTime(a);
+        bVal = getUserAddedTime(b);
+        break;
+      case 'lastLogin':
+        aVal = getUserLastLoginTime(a);
+        bVal = getUserLastLoginTime(b);
+        break;
+      default:
+        aVal = a.name.toLowerCase();
+        bVal = b.name.toLowerCase();
+    }
+    if (aVal < bVal) return -1 * dir;
+    if (aVal > bVal) return 1 * dir;
+    return 0;
+  });
 }
 
-function YouPill() {
-  const theme = useTheme();
-  return (
-    <Box
-      component="span"
-      sx={{
-        flexShrink: 0,
-        px: '8px',
-        py: '1px',
-        borderRadius: '999px',
-        fontSize: 10,
-        fontWeight: 600,
-        letterSpacing: '0.04em',
-        textTransform: 'uppercase',
-        color: theme.palette.textBrand,
-        backgroundColor: theme.palette.surfaceBrandSubtle,
-      }}
-    >
-      You
-    </Box>
-  );
-}
-
-function UserRow({ user, isSelf, isLastAdmin, onChangeRole, onRemove, isFirst }) {
+function UserManagementRow({ user, onOpenUser, onEditUser, onToggleAccess, lockReason }) {
   const theme = useTheme();
   const role = getRole(user.roleId);
+  const isActive = user.status === 'active';
   const isInvited = user.status === 'invited';
 
-  /**
-   * Two rows are frozen, and the controls say which and why rather than just
-   * refusing:
-   *
-   *  - the last Admin, because demoting or removing them leaves nobody able to
-   *    manage people or payment methods again;
-   *  - yourself, because self-demotion is the most common way an account locks
-   *    its own owner out, and a second Admin can always do it for you.
-   */
-  const lockReason = isSelf
-    ? "You can't change your own access. Another Admin can do it for you."
-    : isLastAdmin
-    ? 'This is the only Admin. Promote someone else first.'
-    : null;
+  const primaryCellTextSx = {
+    color: theme.palette.textPrimary,
+    fontWeight: 600,
+    fontSize: 14,
+    lineHeight: 1.43,
+    m: 0,
+  };
 
-  const activity = isInvited
-    ? `Invited ${formatRelativeDay(user.invitedAt)?.toLowerCase() ?? 'recently'}`
-    : user.lastActiveAt
-    ? `Active ${formatRelativeDay(user.lastActiveAt).toLowerCase()}`
-    : 'Never signed in';
+  const secondaryCellTextSx = {
+    color: theme.palette.textSecondary2,
+    fontWeight: 400,
+    fontSize: 14,
+    lineHeight: 1.43,
+    m: 0,
+  };
+
+  const rowHoverBackground = alpha(theme.palette.textPrimary, 0.035);
 
   return (
-    /* One line on desktop. On a phone the role control alone is wider than what
-       is left beside a name and an email, so the row wraps: identity first, its
-       controls on a second line under it, rather than crushing the name to two
-       letters to keep everything abreast. */
-    <Box
-      className="team-row"
+    <TableRow
+      onClick={() => onOpenUser(user)}
       sx={{
-        width: '100%',
-        display: 'flex',
-        flexWrap: { xs: 'wrap', md: 'nowrap' },
-        alignItems: 'center',
-        columnGap: { xs: 1.5, md: 2 },
-        rowGap: 1.25,
-        py: 1.5,
-        borderTop: isFirst ? 'none' : `1px solid ${theme.palette.borderSubtle1}`,
-        '&:hover .team-row-action': { opacity: 1 },
+        cursor: 'pointer',
+        transition: 'background-color 0.15s ease',
+        '&:hover': { backgroundColor: rowHoverBackground },
+        '&:hover td': { backgroundColor: rowHoverBackground },
+        '&:hover .user-row-edit': { opacity: '1 !important' },
+        '& td': {
+          borderBottom: `1px solid ${theme.palette.borderSubtle1}`,
+          boxSizing: 'border-box',
+          height: BODY_ROW_HEIGHT,
+          py: 0,
+          px: CELL_PADDING_X,
+          verticalAlign: 'middle',
+        },
+        '& td.user-row-edit-cell': {
+          px: 0,
+          pr: CELL_PADDING_X,
+        },
+        '&:last-child td': { borderBottom: 0 },
       }}
     >
-      <Avatar
-        sx={{
-          width: 36,
-          height: 36,
-          flexShrink: 0,
-          fontSize: 13,
-          fontWeight: 600,
-          color: theme.palette.textSecondary2,
-          backgroundColor: theme.palette.surfaceGreySubtle,
-          // An invitation that hasn't been accepted is not yet a person here.
-          opacity: isInvited ? 0.6 : 1,
-        }}
-      >
-        {initialsOf(user.name)}
-      </Avatar>
-
-      <Box sx={{ flex: { xs: '1 1 0', md: '1 1 auto' }, minWidth: 0 }}>
-        <Stack direction="row" alignItems="center" spacing={0.75}>
-          <Typography sx={{ fontSize: 15, fontWeight: 600, color: theme.palette.textPrimary }} noWrap>
+      <TableCell>
+        <Stack direction="row" alignItems="center" spacing={1.25} sx={{ minWidth: 0 }}>
+          <Avatar
+            sx={{
+              width: AVATAR_SIZE,
+              height: AVATAR_SIZE,
+              flexShrink: 0,
+              fontSize: 12,
+              fontWeight: 600,
+              color: theme.palette.textSecondary2,
+              backgroundColor: theme.palette.surfaceGreySubtle,
+              opacity: isInvited ? 0.6 : 1,
+            }}
+          >
+            {initialsOf(user.name)}
+          </Avatar>
+          <Typography variant="body2" sx={{ ...primaryCellTextSx, overflow: 'hidden', textOverflow: 'ellipsis' }} noWrap>
             {user.name}
           </Typography>
-          {isSelf ? <YouPill /> : null}
-          {isInvited ? <PendingPill /> : null}
         </Stack>
-        <Typography sx={{ fontSize: 13, lineHeight: '18px', color: theme.palette.textSecondary3 }} noWrap>
+      </TableCell>
+      <TableCell>
+        <Typography variant="body2" sx={{ ...secondaryCellTextSx, overflow: 'hidden', textOverflow: 'ellipsis' }} noWrap>
           {user.email}
         </Typography>
-      </Box>
-
-      {/* Full width beneath the name on a phone, a column of its own from md. */}
-      <Stack
-        direction="row"
-        alignItems="center"
-        spacing={{ xs: 1, md: 2 }}
-        sx={{
-          flexBasis: { xs: '100%', md: 'auto' },
-          flexShrink: 0,
-          justifyContent: { xs: 'space-between', md: 'flex-end' },
-          pl: { xs: '52px', md: 0 },
-        }}
-      >
-        {/* Repeated on the phone row as a plain line: the label-above-value pair
-            needs vertical room the wrapped layout doesn't have. */}
-        <Typography
-          sx={{
-            display: { xs: 'block', md: 'none' },
-            fontSize: 13,
-            color: theme.palette.textSecondary3,
-          }}
-          noWrap
-        >
-          {activity}
+      </TableCell>
+      <TableCell>
+        <UserRoleChip roleId={user.roleId} label={role.label} />
+      </TableCell>
+      <TableCell>
+        <Typography variant="body2" sx={secondaryCellTextSx}>
+          {formatUserAddedAt(user)}
         </Typography>
-
-        <Box sx={{ flexShrink: 0, display: { xs: 'none', md: 'block' }, width: 140 }}>
-          <Typography sx={{ fontSize: 12, lineHeight: '16px', color: theme.palette.textSecondary3 }}>
-            Activity
-          </Typography>
-          <Typography sx={{ mt: '2px', fontSize: 14, fontWeight: 500, color: theme.palette.textPrimary }} noWrap>
-            {activity}
-          </Typography>
-        </Box>
-
-        <Stack direction="row" alignItems="center" spacing={0.5} sx={{ flexShrink: 0 }}>
-      <Tooltip title={lockReason ?? ''} placement="top" disableHoverListener={!lockReason}>
-        <Box sx={{ flexShrink: 0, width: { xs: 132, sm: 150 } }}>
-          <Select
-            fullWidth
+      </TableCell>
+      <TableCell>
+        <Typography variant="body2" sx={secondaryCellTextSx}>
+          {formatUserLastLogin(user.lastActiveAt)}
+        </Typography>
+      </TableCell>
+      <TableCell align="center" onClick={(event) => event.stopPropagation()}>
+        <Tooltip title={lockReason ?? ''} placement="top" disableHoverListener={!lockReason}>
+          <Switch
             size="small"
-            value={role.label}
+            checked={isActive}
             disabled={Boolean(lockReason)}
-            onChange={(event) => onChangeRole(user.id, getRoleIdFromLabel(event.target.value))}
-            inputProps={{ 'aria-label': `Role for ${user.name}` }}
-            /* Without this the closed control renders the whole option — label
-               and its description — and spills out of the row. The summary is
-               there to help you choose, not to be read back afterwards. */
-            renderValue={(selected) => selected}
+            onClick={(event) => event.stopPropagation()}
+            onChange={(event) => onToggleAccess(user, event.target.checked)}
+            inputProps={{ 'aria-label': `Access for ${user.name}` }}
             sx={{
-              borderRadius: '8px',
-              // The theme sets minWidth: 220 on inputs, which is wider than a
-              // phone leaves for this control — without clearing it the row
-              // overflows the viewport however narrow the wrapper is.
-              minWidth: 0,
-              '& .MuiSelect-select': { fontSize: 14, fontWeight: 500, py: 0.75, minWidth: '0 !important' },
+              '& .MuiSwitch-switchBase.Mui-checked + .MuiSwitch-track': {
+                backgroundColor: `${primitive.blue[700]} !important`,
+                opacity: 1,
+              },
+              '& .MuiSwitch-switchBase.Mui-checked.Mui-disabled + .MuiSwitch-track': {
+                backgroundColor: `${primitive.blue[700]} !important`,
+              },
             }}
-          >
-            {USER_ROLES.map((entry) => (
-              <MenuItem key={entry.id} value={entry.label} sx={{ py: 1, display: 'block' }}>
-                <Typography sx={{ fontSize: 14, fontWeight: 500, color: theme.palette.textPrimary }}>
-                  {entry.label}
-                </Typography>
-                <Typography sx={{ fontSize: 12, color: theme.palette.textSecondary3 }}>
-                  {entry.summary}
-                </Typography>
-              </MenuItem>
-            ))}
-          </Select>
-        </Box>
-      </Tooltip>
-
-      <Box sx={{ flexShrink: 0, width: 30 }}>
-        {lockReason ? null : (
-          <IconButton
-            className="team-row-action"
-            size="small"
-            aria-label={`Remove ${user.name}`}
-            onClick={() => onRemove(user)}
-            sx={{
-              width: 30,
-              height: 30,
-              color: theme.palette.textSecondary3,
-              opacity: 0,
-              transition: 'opacity 0.15s ease, color 0.15s ease',
-              '&:hover': { backgroundColor: 'transparent', color: theme.palette.textAlert },
-              '&:focus-visible': { opacity: 1 },
-              '@media (hover: none)': { opacity: 1 },
-            }}
-          >
-            <DeleteOutlineIcon sx={{ fontSize: 18 }} />
-          </IconButton>
-        )}
-      </Box>
-        </Stack>
-      </Stack>
-    </Box>
+          />
+        </Tooltip>
+      </TableCell>
+      <TableCell
+        align="right"
+        className="user-row-edit-cell"
+        sx={{
+          position: 'sticky',
+          right: 0,
+          zIndex: 1,
+          width: ROW_EDIT_CELL_WIDTH,
+          minWidth: ROW_EDIT_CELL_WIDTH,
+          maxWidth: ROW_EDIT_CELL_WIDTH,
+          pl: 0,
+          pr: CELL_PADDING_X,
+          py: 0,
+          boxSizing: 'border-box',
+          backgroundColor: theme.palette.surfaceWhite,
+        }}
+        onClick={(event) => event.stopPropagation()}
+      >
+        <IconButton
+          className="user-row-edit"
+          size="small"
+          aria-label={`Edit ${user.name}`}
+          onClick={() => onEditUser?.(user)}
+          sx={{
+            width: ROW_EDIT_ACTION_WIDTH,
+            height: ROW_EDIT_ACTION_WIDTH,
+            mr: 0,
+            display: 'inline-flex',
+            color: theme.palette.textSecondary3,
+            opacity: 0,
+            transition: 'opacity 0.15s ease, color 0.15s ease',
+            '&:hover': { backgroundColor: 'transparent', color: theme.palette.textPrimary },
+            '&:focus-visible': { opacity: '1 !important' },
+            '@media (hover: none)': { opacity: '1 !important' },
+          }}
+        >
+          <EditOutlinedIcon sx={{ fontSize: 18 }} />
+        </IconButton>
+      </TableCell>
+    </TableRow>
   );
 }
 
 export function UserManagementPage() {
   const theme = useTheme();
-  const navigate = useNavigate();
   const { session } = useAuth();
-  const { users, inviteUser, changeUserRole, removeUser, isLastAdmin, emailInUse } = useTeam();
+  const { users, inviteUser, updateUser, setUserActive, isLastAdmin, emailInUse } = useTeam();
   const [inviteOpen, setInviteOpen] = useState(false);
+  const [selectedUser, setSelectedUser] = useState(null);
+  const [userToEdit, setUserToEdit] = useState(null);
   const [userPendingRemoval, setUserPendingRemoval] = useState(null);
+  const [query, setQuery] = useState('');
+  const [page, setPage] = useState(0);
+  const [sortField, setSortField] = useState('name');
+  const [sortDirection, setSortDirection] = useState('asc');
 
-  const activeCount = users.filter((user) => user.status !== 'invited').length;
-  const invitedCount = users.length - activeCount;
+  useEffect(() => {
+    setPage(0);
+  }, [query]);
 
+  const filteredUsers = useMemo(() => {
+    let rows = [...users];
+    if (query.trim()) {
+      const normalized = query.trim().toLowerCase();
+      rows = rows.filter(
+        (user) =>
+          user.name.toLowerCase().includes(normalized) || user.email.toLowerCase().includes(normalized),
+      );
+    }
+    return sortUsers(rows, sortField, sortDirection);
+  }, [users, query, sortField, sortDirection]);
+
+  const pagedUsers = filteredUsers.slice(page * ROWS_PER_PAGE, page * ROWS_PER_PAGE + ROWS_PER_PAGE);
+  const total = filteredUsers.length;
+  const from = total === 0 ? 0 : page * ROWS_PER_PAGE + 1;
+  const to = Math.min((page + 1) * ROWS_PER_PAGE, total);
+  const canPrev = page > 0;
+  const canNext = (page + 1) * ROWS_PER_PAGE < total;
+
+  const handleSort = (field) => {
+    if (sortField === field) {
+      setSortDirection((prev) => (prev === 'asc' ? 'desc' : 'asc'));
+    } else {
+      setSortField(field);
+      setSortDirection('asc');
+    }
+  };
+
+  const getLockReason = (user) => {
+    const isSelf = user.email.toLowerCase() === session?.email?.toLowerCase();
+    if (isSelf) return "You can't change your own access. Another Admin can do it for you.";
+    if (isLastAdmin(user.id)) return 'This is the only Admin. Promote someone else first.';
+    return null;
+  };
+
+  const handleToggleAccess = (user, active) => {
+    if (getLockReason(user)) return;
+    if (active) {
+      setUserActive(user.id, true);
+      return;
+    }
+    setUserPendingRemoval(user);
+  };
+
+  const headerCellSx = {
+    fontWeight: 500,
+    fontSize: 13,
+    color: theme.palette.textSecondary3,
+    borderBottom: `1px solid ${theme.palette.borderSubtle1}`,
+    py: 1.25,
+    px: CELL_PADDING_X,
+    backgroundColor: theme.palette.surfaceWhite,
+    whiteSpace: 'nowrap',
+  };
+
+  const sortLabelSx = {
+    color: `${theme.palette.textSecondary3} !important`,
+    '& .MuiTableSortLabel-icon': {
+      color: `${theme.palette.textSecondary3} !important`,
+      opacity: 1,
+      fontSize: 16,
+    },
+  };
 
   return (
-    <PortalShell activeNav="dashboard">
+    <PortalShell activeNav={false}>
       <Stack spacing={2.5} sx={{ width: '100%' }}>
-        <PageHeader
-          onBack={() => navigate('/dashboard')}
-          backLabel="Back to dashboard"
-          title="User Management"
-          description={
-            invitedCount > 0
-              ? `${activeCount} ${activeCount === 1 ? 'person has' : 'people have'} access, ${invitedCount} invited.`
-              : `${activeCount} ${activeCount === 1 ? 'person has' : 'people have'} access to this account.`
-          }
-          actions={
-            <Button
-              variant="primary"
-              onClick={() => setInviteOpen(true)}
-              startIcon={<PersonAddAltOutlinedIcon sx={{ fontSize: 18 }} />}
-            >
-              Invite someone
-            </Button>
-          }
-        />
+        <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2} alignItems={{ sm: 'center' }} justifyContent="space-between">
+          <Search
+            placeholder="Search"
+            variant="outlined"
+            size="small"
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            sx={{
+              width: { xs: '100%', sm: 240 },
+              '& .MuiOutlinedInput-root': {
+                borderRadius: '8px',
+                backgroundColor: theme.palette.surfaceWhite,
+                height: 36,
+              },
+              '& .MuiOutlinedInput-input': { fontSize: 14, fontWeight: 500, py: '7px' },
+              '& .MuiOutlinedInput-notchedOutline': { borderColor: theme.palette.borderSubtle2 },
+            }}
+            InputProps={{
+              startAdornment: (
+                <InputAdornment position="start">
+                  <SearchRoundedIcon sx={{ fontSize: 20, color: theme.palette.textSecondary2 }} />
+                </InputAdornment>
+              ),
+            }}
+          />
+          <Button
+            variant="primary"
+            onClick={() => setInviteOpen(true)}
+            startIcon={<AddIcon sx={{ fontSize: 18 }} />}
+            sx={{ height: 36, px: 2.5, flexShrink: 0 }}
+          >
+            Invite User
+          </Button>
+        </Stack>
 
-        <Box>
-          {users.map((user, index) => (
-            <UserRow
-              key={user.id}
-              user={user}
-              isSelf={user.email.toLowerCase() === session?.email?.toLowerCase()}
-              isLastAdmin={isLastAdmin(user.id)}
-              onChangeRole={changeUserRole}
-              onRemove={setUserPendingRemoval}
-              isFirst={index === 0}
-            />
-          ))}
+        <Box
+          sx={{
+            pt: 0.5,
+            maxHeight: 'calc(100vh - 280px)',
+            overflowY: 'auto',
+            overflowX: 'hidden',
+          }}
+        >
+          {filteredUsers.length === 0 ? (
+            <EmptyState title="No users found" description="Try adjusting your search." />
+          ) : (
+            <>
+              <TableContainer sx={{ overflowX: 'auto', maxWidth: '100%' }}>
+                <Table sx={{ tableLayout: 'fixed', width: '100%', minWidth: 960 }}>
+                  <TableHead>
+                    <TableRow>
+                      <TableCell sx={{ ...headerCellSx, width: '20%' }} sortDirection={sortField === 'name' ? sortDirection : false}>
+                        <TableSortLabel
+                          active={sortField === 'name'}
+                          direction={sortField === 'name' ? sortDirection : 'asc'}
+                          onClick={() => handleSort('name')}
+                          sx={sortLabelSx}
+                        >
+                          Name
+                        </TableSortLabel>
+                      </TableCell>
+                      <TableCell sx={{ ...headerCellSx, width: '22%' }} sortDirection={sortField === 'email' ? sortDirection : false}>
+                        <TableSortLabel
+                          active={sortField === 'email'}
+                          direction={sortField === 'email' ? sortDirection : 'asc'}
+                          onClick={() => handleSort('email')}
+                          sx={sortLabelSx}
+                        >
+                          Email
+                        </TableSortLabel>
+                      </TableCell>
+                      <TableCell sx={{ ...headerCellSx, width: '14%' }}>Role</TableCell>
+                      <TableCell sx={{ ...headerCellSx, width: '14%' }} sortDirection={sortField === 'addedAt' ? sortDirection : false}>
+                        <TableSortLabel
+                          active={sortField === 'addedAt'}
+                          direction={sortField === 'addedAt' ? sortDirection : 'desc'}
+                          onClick={() => handleSort('addedAt')}
+                          sx={sortLabelSx}
+                        >
+                          Added at
+                        </TableSortLabel>
+                      </TableCell>
+                      <TableCell sx={{ ...headerCellSx, width: '20%' }} sortDirection={sortField === 'lastLogin' ? sortDirection : false}>
+                        <TableSortLabel
+                          active={sortField === 'lastLogin'}
+                          direction={sortField === 'lastLogin' ? sortDirection : 'desc'}
+                          onClick={() => handleSort('lastLogin')}
+                          sx={sortLabelSx}
+                        >
+                          Last login
+                        </TableSortLabel>
+                      </TableCell>
+                      <TableCell sx={{ ...headerCellSx, width: '10%' }} align="center">
+                        User Status
+                      </TableCell>
+                      <TableCell
+                        className="user-row-edit-cell"
+                        sx={{
+                          ...headerCellSx,
+                          position: 'sticky',
+                          right: 0,
+                          zIndex: 2,
+                          width: ROW_EDIT_CELL_WIDTH,
+                          minWidth: ROW_EDIT_CELL_WIDTH,
+                          maxWidth: ROW_EDIT_CELL_WIDTH,
+                          pl: 0,
+                          pr: CELL_PADDING_X,
+                          backgroundColor: theme.palette.surfaceWhite,
+                        }}
+                        aria-hidden
+                      />
+                    </TableRow>
+                  </TableHead>
+                  <TableBody>
+                    {pagedUsers.map((user) => (
+                      <UserManagementRow
+                        key={user.id}
+                        user={user}
+                        lockReason={getLockReason(user)}
+                        onOpenUser={setSelectedUser}
+                        onEditUser={setUserToEdit}
+                        onToggleAccess={handleToggleAccess}
+                      />
+                    ))}
+                  </TableBody>
+                </Table>
+              </TableContainer>
+
+              <Stack direction="row" alignItems="center" justifyContent="flex-end" spacing={1.25} sx={{ pt: 2 }}>
+                <Typography variant="body2" sx={{ color: theme.palette.textSecondary2, fontSize: 14 }}>
+                  {from}-{to} of {total}
+                </Typography>
+                <IconButton
+                  size="small"
+                  disabled={!canPrev}
+                  onClick={() => setPage((p) => p - 1)}
+                  sx={{
+                    border: `1px solid ${theme.palette.borderSubtle2}`,
+                    borderRadius: '50%',
+                    width: 32,
+                    height: 32,
+                    color: theme.palette.textSecondary2,
+                    '&.Mui-disabled': { opacity: 0.4 },
+                  }}
+                >
+                  <ChevronLeftIcon sx={{ fontSize: 18 }} />
+                </IconButton>
+                <IconButton
+                  size="small"
+                  disabled={!canNext}
+                  onClick={() => setPage((p) => p + 1)}
+                  sx={{
+                    border: `1px solid ${theme.palette.borderSubtle2}`,
+                    borderRadius: '50%',
+                    width: 32,
+                    height: 32,
+                    color: theme.palette.textSecondary2,
+                    '&.Mui-disabled': { opacity: 0.4 },
+                  }}
+                >
+                  <ChevronRightIcon sx={{ fontSize: 18 }} />
+                </IconButton>
+              </Stack>
+            </>
+          )}
         </Box>
-
-        <Typography sx={{ fontSize: 12, lineHeight: '18px', color: theme.palette.textSecondary3 }}>
-          Admins can manage people and payment methods. Billing can pay invoices and manage payment
-          methods. Viewers can read invoices and reports but cannot pay.
-        </Typography>
       </Stack>
 
-      <InviteUserDialog
+      <InviteUserDrawer
         open={inviteOpen}
         onClose={() => setInviteOpen(false)}
         onInvite={inviteUser}
         emailInUse={emailInUse}
       />
 
-      <ConfirmDialog
+      <UserDetailDrawer
+        open={Boolean(selectedUser)}
+        user={selectedUser}
+        onClose={() => setSelectedUser(null)}
+      />
+
+      <EditUserDrawer
+        open={Boolean(userToEdit)}
+        user={userToEdit}
+        onClose={() => setUserToEdit(null)}
+        onUpdate={(userId, patch) => {
+          updateUser(userId, patch);
+          setSelectedUser((current) =>
+            current?.id === userId
+              ? {
+                  ...current,
+                  name: patch.name,
+                  roleId: patch.roleId,
+                  franchises: patch.franchises,
+                  sites: patch.sites,
+                }
+              : current,
+          );
+        }}
+      />
+
+      <InactivateUserDialog
         open={Boolean(userPendingRemoval)}
-        title={
-          userPendingRemoval?.status === 'invited'
-            ? 'Cancel this invitation?'
-            : `Remove ${userPendingRemoval?.name}?`
-        }
-        description={
-          userPendingRemoval?.status === 'invited'
-            ? `${userPendingRemoval?.email} will no longer be able to join with this invite.`
-            : `${userPendingRemoval?.email} will lose access to invoices, reports and payment methods immediately.`
-        }
-        confirmLabel={userPendingRemoval?.status === 'invited' ? 'Cancel invite' : 'Remove access'}
-        cancelLabel="Keep"
+        userName={userPendingRemoval?.name}
         onClose={() => setUserPendingRemoval(null)}
         onConfirm={() => {
-          removeUser(userPendingRemoval.id);
+          const userId = userPendingRemoval.id;
+          setUserActive(userId, false);
+          setSelectedUser((current) =>
+            current?.id === userId ? { ...current, status: 'inactive' } : current,
+          );
           setUserPendingRemoval(null);
         }}
       />

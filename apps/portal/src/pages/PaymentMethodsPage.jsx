@@ -1,65 +1,38 @@
 import Box from '@mui/material/Box';
 import Divider from '@mui/material/Divider';
+import InputAdornment from '@mui/material/InputAdornment';
 import Stack from '@mui/material/Stack';
 import Typography from '@mui/material/Typography';
 import { useTheme } from '@mui/material/styles';
 import AddIcon from '@mui/icons-material/Add';
-import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import SearchRoundedIcon from '@mui/icons-material/SearchRounded';
+import { useMemo, useState } from 'react';
 import { PortalShell } from '../components/PortalShell';
 import { AddPaymentMethodModal } from '../components/AddPaymentMethodModal';
 import { ConfirmDialog } from '../components/ConfirmDialog';
 import { PaymentMethodListRow } from '../components/PaymentMethodListRow';
-import { Button, EmptyState, PageHeader } from '../components/design-system';
+import { Button, EmptyState, Search } from '../components/design-system';
 import { usePaymentMethods } from '../context/PaymentMethodsContext';
 import {
   PAYMENT_METHOD_CATEGORIES,
+  getPaymentMethodRowDisplay,
   getPaymentMethodShortLabel,
   getPaymentMethodType,
 } from '../data/paymentMethodCategories';
 import { PAYMENT_METHOD_TYPES } from '../components/payment-method-logos';
 
-/**
- * Prefill the edit form from stored details. Secrets we deliberately never keep
- * (full card number, CVV, PayPal password) come back blank and must be re-entered.
- */
-function getEditFormValues(method) {
-  const d = method.details ?? {};
-  switch (method.typeId) {
-    case 'credit-card':
-      return {
-        nameOnCard: d.nameOnCard ?? '',
-        expiryMonth: d.expiryMonth ?? '',
-        // The field takes two digits; stored years may be four.
-        expiryYear: String(d.expiryYear ?? '').slice(-2),
-      };
-    case 'ach':
-      return { routingNumber: d.routingNumber ?? '', accountHolderName: d.accountHolderName ?? '' };
-    case 'paypal':
-      return { email: d.email ?? '' };
-    case 'zelle':
-      return { contact: d.contact ?? '', nickname: d.nickname ?? '' };
-    case 'venmo':
-      return { username: d.username ?? '', phone: d.phone ?? '' };
-    default:
-      return {};
-  }
-}
-
 export function PaymentMethodsPage() {
   const theme = useTheme();
-  const navigate = useNavigate();
+  const [query, setQuery] = useState('');
   const {
     methods,
     defaultMethodId,
     addPaymentMethod,
     removePaymentMethod,
     setDefaultPaymentMethod,
-    updatePaymentMethod,
   } = usePaymentMethods();
   const [addOpen, setAddOpen] = useState(false);
   const [addCategory, setAddCategory] = useState(null);
-  const [editingMethod, setEditingMethod] = useState(null);
   const [methodPendingRemoval, setMethodPendingRemoval] = useState(null);
 
   /**
@@ -78,35 +51,60 @@ export function PaymentMethodsPage() {
 
   const openAddPaymentMethod = () => {
     setAddCategory(null);
-    setEditingMethod(null);
     setAddOpen(true);
   };
 
-  /** Re-open the form for an existing method, prefilled with what we still hold. */
-  const openEditPaymentMethod = (method) => {
-    setEditingMethod(method);
-    setAddCategory(method.typeId);
-    setAddOpen(true);
-  };
+  const filteredMethods = useMemo(() => {
+    const normalized = query.trim().toLowerCase();
+    if (!normalized) return methods;
+    return methods.filter((method) => {
+      const display = getPaymentMethodRowDisplay(method);
+      const typeLabel = getPaymentMethodType(method.typeId, PAYMENT_METHOD_TYPES)?.label ?? '';
+      const haystack = [display.primary, display.secondary, getPaymentMethodShortLabel(method), typeLabel]
+        .filter(Boolean)
+        .join(' ')
+        .toLowerCase();
+      return haystack.includes(normalized);
+    });
+  }, [methods, query]);
 
   return (
-    <PortalShell activeNav="invoice-payment">
+    <PortalShell activeNav={false}>
       <Stack spacing={2.5} sx={{ width: '100%' }}>
-        <PageHeader
-          onBack={() => navigate('/invoice-payment')}
-          backLabel="Back to invoices"
-          title="Card Management"
-          description="Saved payment methods for this account. The default is what checkout offers first."
-          actions={
-            <Button
-              variant="primary"
-              onClick={openAddPaymentMethod}
-              startIcon={<AddIcon sx={{ fontSize: 18 }} />}
-            >
-              Add Payment method
-            </Button>
-          }
-        />
+        <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2} alignItems={{ sm: 'center' }} justifyContent="space-between">
+          <Search
+            placeholder="Search"
+            variant="outlined"
+            size="small"
+            value={query}
+            onChange={(event) => setQuery(event.target.value)}
+            sx={{
+              width: { xs: '100%', sm: 240 },
+              '& .MuiOutlinedInput-root': {
+                borderRadius: '8px',
+                backgroundColor: theme.palette.surfaceWhite,
+                height: 36,
+              },
+              '& .MuiOutlinedInput-input': { fontSize: 14, fontWeight: 500, py: '7px' },
+              '& .MuiOutlinedInput-notchedOutline': { borderColor: theme.palette.borderSubtle2 },
+            }}
+            InputProps={{
+              startAdornment: (
+                <InputAdornment position="start">
+                  <SearchRoundedIcon sx={{ fontSize: 20, color: theme.palette.textSecondary2 }} />
+                </InputAdornment>
+              ),
+            }}
+          />
+          <Button
+            variant="primary"
+            onClick={openAddPaymentMethod}
+            startIcon={<AddIcon sx={{ fontSize: 18 }} />}
+            sx={{ height: 36, px: 2.5, flexShrink: 0 }}
+          >
+            Add Payment method
+          </Button>
+        </Stack>
 
         <Box>
           {methods.length === 0 ? (
@@ -124,12 +122,15 @@ export function PaymentMethodsPage() {
               </Button>
             </EmptyState>
           ) : null}
+          {methods.length > 0 && filteredMethods.length === 0 ? (
+            <EmptyState title="No payment methods found" description="Try adjusting your search." />
+          ) : null}
           {PAYMENT_METHOD_CATEGORIES.filter((category) =>
-            methods.some((method) => method.typeId === category.typeId),
+            filteredMethods.some((method) => method.typeId === category.typeId),
           ).map((category, categoryIndex) => {
             // A category with nothing in it is dropped entirely — heading included —
             // so removing the last method never leaves an empty section behind.
-            const rows = methods.filter((method) => method.typeId === category.typeId);
+            const rows = filteredMethods.filter((method) => method.typeId === category.typeId);
 
             return (
               <Box key={category.typeId}>
@@ -158,7 +159,6 @@ export function PaymentMethodsPage() {
                         key={method.id}
                         method={method}
                         isDefault={method.id === defaultMethodId}
-                        onEdit={openEditPaymentMethod}
                         onSetDefault={setDefaultPaymentMethod}
                         onRemove={() => setMethodPendingRemoval(method)}
                         isFirst={index === 0}
@@ -194,23 +194,13 @@ export function PaymentMethodsPage() {
         onClose={() => {
           setAddOpen(false);
           setAddCategory(null);
-          setEditingMethod(null);
         }}
         onSave={(typeId, details) => {
-          if (editingMethod) {
-            updatePaymentMethod(editingMethod.id, typeId, details);
-            return;
-          }
           addPaymentMethod(typeId, details, { makeDefault: methods.length === 0 || !defaultMethodId });
         }}
-        initialValues={editingMethod ? getEditFormValues(editingMethod) : undefined}
-        entityKey={editingMethod?.id ?? 'new'}
-        lockType={Boolean(editingMethod)}
-        saveLabel={editingMethod ? 'Save changes' : undefined}
+        entityKey="new"
         title={
-          editingMethod
-            ? `Edit ${getPaymentMethodType(editingMethod.typeId, PAYMENT_METHOD_TYPES)?.label ?? 'payment method'}`
-            : addCategory
+          addCategory
             ? `Add ${getPaymentMethodType(addCategory, PAYMENT_METHOD_TYPES)?.label ?? 'payment method'}`
             : 'Add payment method'
         }

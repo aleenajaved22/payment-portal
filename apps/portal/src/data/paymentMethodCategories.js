@@ -2,8 +2,6 @@ export const PAYMENT_METHOD_CATEGORIES = [
   { title: 'Credit card', typeId: 'credit-card' },
   { title: 'ACH', typeId: 'ach' },
   { title: 'PayPal', typeId: 'paypal' },
-  { title: 'Zelle', typeId: 'zelle' },
-  { title: 'Venmo', typeId: 'venmo' },
 ];
 
 export const EMPTY_PAYMENT_METHOD_FORMS = {
@@ -21,14 +19,6 @@ export const EMPTY_PAYMENT_METHOD_FORMS = {
   },
   paypal: {
     email: '',
-  },
-  zelle: {
-    contact: '',
-    nickname: '',
-  },
-  venmo: {
-    username: '',
-    phone: '',
   },
 };
 
@@ -93,16 +83,6 @@ export function buildDetailsFromForm(typeId, form = {}) {
       return {
         email: String(form.email ?? '').trim(),
       };
-    case 'zelle':
-      return {
-        contact: String(form.contact ?? '').trim(),
-        nickname: String(form.nickname ?? '').trim(),
-      };
-    case 'venmo':
-      return {
-        username: String(form.username ?? '').trim(),
-        phone: String(form.phone ?? '').trim(),
-      };
     default:
       return {};
   }
@@ -129,16 +109,6 @@ export function buildPaymentMethodSummary(typeId, details = {}) {
       return {
         label: details.email || 'PayPal',
         subtitle: '',
-      };
-    case 'zelle':
-      return {
-        label: details.contact || details.nickname || 'Zelle',
-        subtitle: details.nickname && details.contact ? details.nickname : '',
-      };
-    case 'venmo':
-      return {
-        label: details.username || 'Venmo',
-        subtitle: details.phone ?? '',
       };
     default:
       return { label: 'Payment method', subtitle: '' };
@@ -193,24 +163,6 @@ export function getPaymentMethodRowDisplay(method) {
         fields: [],
       };
     }
-    case 'zelle': {
-      const nickname = details.nickname?.trim();
-      const contact = details.contact?.trim();
-      return {
-        primary: nickname || contact || method.label || 'Zelle',
-        reference: 'Zelle',
-        fields: contact ? [{ label: 'Email or phone', value: contact, minWidth: 180 }] : [],
-      };
-    }
-    case 'venmo': {
-      const username = details.username?.trim();
-      const phone = details.phone?.trim();
-      return {
-        primary: username ? (username.startsWith('@') ? username : `@${username}`) : method.label || 'Venmo',
-        reference: 'Venmo',
-        fields: phone ? [{ label: 'Mobile number', value: phone, minWidth: 140 }] : [],
-      };
-    }
     default: {
       return {
         primary: method.label ?? 'Payment method',
@@ -244,13 +196,6 @@ export function getPaymentMethodShortLabel(method) {
       return details.accountLast4 ? `bank account •••• ${details.accountLast4}` : 'your bank account';
     case 'paypal':
       return details.email ? `PayPal (${details.email})` : 'PayPal';
-    case 'zelle':
-      return details.nickname?.trim() || details.contact?.trim() || 'Zelle';
-    case 'venmo': {
-      const username = details.username?.trim();
-      if (!username) return 'Venmo';
-      return username.startsWith('@') ? username : `@${username}`;
-    }
     default:
       return method.label ?? null;
   }

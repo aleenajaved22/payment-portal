@@ -10,3 +10,5 @@ coverage/
 .vite/
 *.log
 .cursor/
+.vercel/
+.vercel

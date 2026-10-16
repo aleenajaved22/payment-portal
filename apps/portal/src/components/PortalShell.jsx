@@ -12,6 +12,7 @@ const NAV_ITEMS = [
   { label: 'Payments', value: 'invoice-payment', path: '/invoice-payment' },
 ];
 
+/** `activeNav` matches a top tab value, or `false` when the page is not in the main nav (e.g. User Management). */
 export function PortalShell({ activeNav = 'reports', banner, mainSx, children }) {
   const theme = useTheme();
   const navigate = useNavigate();
@@ -21,6 +22,9 @@ export function PortalShell({ activeNav = 'reports', banner, mainSx, children })
       <Box
         component="header"
         sx={{
+          position: 'sticky',
+          top: 0,
+          zIndex: theme.zIndex.appBar,
           backgroundColor: theme.palette.surfaceWhite,
           px: '32px',
           py: '20px',
@@ -57,7 +61,7 @@ export function PortalShell({ activeNav = 'reports', banner, mainSx, children })
             }}
           >
             <Tabs
-              value={activeNav}
+              value={activeNav === false ? false : activeNav}
               // Scrollable so a fourth destination, or a longer label in
               // translation, slides rather than spilling off the phone.
               variant="scrollable"

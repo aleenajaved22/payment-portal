@@ -9,7 +9,7 @@ const ICON_SIZE = 18;
 const TEXT_ICON_GAP = 6;
 const HORIZONTAL_PADDING = 12;
 
-export function FilterSelect({ label, value, onChange, options }) {
+export function FilterSelect({ label, value, onChange, options, clearFirstOption = true }) {
   const theme = useTheme();
   const selectPaddingRight = HORIZONTAL_PADDING + ICON_SIZE + TEXT_ICON_GAP;
 
@@ -69,11 +69,14 @@ export function FilterSelect({ label, value, onChange, options }) {
           },
         }}
       >
-        {options.map((option) => (
-          <MenuItem key={option} value={option === options[0] ? '' : option}>
-            {option}
-          </MenuItem>
-        ))}
+        {options.map((option) => {
+          const menuValue = clearFirstOption && option === options[0] ? '' : option;
+          return (
+            <MenuItem key={option} value={menuValue}>
+              {option}
+            </MenuItem>
+          );
+        })}
       </Select>
     </FormControl>
   );

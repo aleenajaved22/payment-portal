@@ -13,6 +13,7 @@ import { useTheme } from '@mui/material/styles';
 import DownloadOutlinedIcon from '@mui/icons-material/DownloadOutlined';
 import { NewSiteBadge } from './NewSiteBadge';
 import { ReportTypeChip } from './ReportTypeChip';
+import { formatInvoiceDueDate } from '../../data/mockInvoices';
 
 export function ReportsTable({ reports, sortField, sortDirection, onSort, onOpenReport, onDownload }) {
   const theme = useTheme();
@@ -44,12 +45,13 @@ export function ReportsTable({ reports, sortField, sortDirection, onSort, onOpen
        screen. Without the explicit minWidth the fixed layout pushed the whole
        page sideways instead — 723px of document in a 375px viewport. */
     <TableContainer sx={{ width: '100%', maxWidth: '100%', overflowX: 'auto' }}>
-      <Table sx={{ tableLayout: 'fixed', minWidth: 680 }}>
+      <Table sx={{ tableLayout: 'fixed', minWidth: 820 }}>
         <TableHead>
           <TableRow>
-            <TableCell sx={{ ...headerCellSx, width: '34%' }}>Site</TableCell>
-            <TableCell sx={{ ...headerCellSx, width: '22%' }}>Report Type</TableCell>
-            <TableCell sx={{ ...headerCellSx, width: '22%' }} sortDirection={sortField === 'day' ? sortDirection : false}>
+            <TableCell sx={{ ...headerCellSx, width: '24%' }}>Site</TableCell>
+            <TableCell sx={{ ...headerCellSx, width: '16%' }}>Company</TableCell>
+            <TableCell sx={{ ...headerCellSx, width: '18%' }}>Report Type</TableCell>
+            <TableCell sx={{ ...headerCellSx, width: '18%' }} sortDirection={sortField === 'day' ? sortDirection : false}>
               <TableSortLabel
                 active={sortField === 'day'}
                 direction={sortField === 'day' ? sortDirection : 'desc'}
@@ -59,7 +61,7 @@ export function ReportsTable({ reports, sortField, sortDirection, onSort, onOpen
                 Day
               </TableSortLabel>
             </TableCell>
-            <TableCell sx={{ ...headerCellSx, width: onDownload ? '18%' : '22%' }} sortDirection={sortField === 'date' ? sortDirection : false}>
+            <TableCell sx={{ ...headerCellSx, width: onDownload ? '16%' : '20%' }} sortDirection={sortField === 'date' ? sortDirection : false}>
               <TableSortLabel
                 active={sortField === 'date'}
                 direction={sortField === 'date' ? sortDirection : 'desc'}
@@ -126,6 +128,20 @@ export function ReportsTable({ reports, sortField, sortDirection, onSort, onOpen
                 </Stack>
               </TableCell>
               <TableCell>
+                <Typography
+                  variant="body2"
+                  sx={{
+                    color: theme.palette.textSecondary2,
+                    fontSize: 14,
+                    overflow: 'hidden',
+                    textOverflow: 'ellipsis',
+                    whiteSpace: 'nowrap',
+                  }}
+                >
+                  {report.company ?? '—'}
+                </Typography>
+              </TableCell>
+              <TableCell>
                 <ReportTypeChip type={report.reportType} />
               </TableCell>
               <TableCell>
@@ -135,7 +151,7 @@ export function ReportsTable({ reports, sortField, sortDirection, onSort, onOpen
               </TableCell>
               <TableCell>
                 <Typography variant="body2" sx={{ color: theme.palette.textSecondary2, fontSize: 14 }}>
-                  {report.date}
+                  {formatInvoiceDueDate(report.date)}
                 </Typography>
               </TableCell>
               {onDownload ? (

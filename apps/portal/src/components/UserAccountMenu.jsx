@@ -34,7 +34,8 @@ function MenuRow({ icon, label, onClick, trailing, showChevron = true, labelColo
         border: 0,
         background: 'none',
         cursor: onClick ? 'pointer' : 'default',
-        p: 0,
+        py: 0.5,
+        px: 0,
         textAlign: 'left',
         font: 'inherit',
       }}

@@ -25,10 +25,6 @@ function isSameMethod(typeId, a = {}, b = {}) {
       return eq(a.accountLast4, b.accountLast4) && eq(a.routingNumber, b.routingNumber);
     case 'paypal':
       return eq(a.email, b.email);
-    case 'zelle':
-      return eq(a.contact, b.contact);
-    case 'venmo':
-      return eq(a.username, b.username);
     default:
       return false;
   }
