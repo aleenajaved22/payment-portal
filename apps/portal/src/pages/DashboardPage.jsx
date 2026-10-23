@@ -161,7 +161,7 @@ export function DashboardPage() {
           subscription={subscription}
           contractSummary={contractSummary}
           paymentMethod={defaultMethod?.subtitle}
-          onManage={() => navigate('/payment-methods')}
+          onManage={() => navigate('/settings/payment-methods')}
         />
       ) : null}
 
@@ -193,7 +193,7 @@ export function DashboardPage() {
             method={defaultMethod}
             methods={methods}
             onSelectMethod={setDefaultPaymentMethod}
-            onManage={() => navigate('/payment-methods')}
+            onManage={() => navigate('/settings/payment-methods')}
             sx={{ flex: '0 0 auto', borderBottom: `1px solid ${theme.palette.borderSubtle1}` }}
           />
           <FilterMixPanel

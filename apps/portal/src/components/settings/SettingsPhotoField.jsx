@@ -1,23 +1,20 @@
 import Avatar from '@mui/material/Avatar';
 import Box from '@mui/material/Box';
+import IconButton from '@mui/material/IconButton';
 import Stack from '@mui/material/Stack';
 import Typography from '@mui/material/Typography';
 import { useTheme } from '@mui/material/styles';
+import PhotoCameraOutlinedIcon from '@mui/icons-material/PhotoCameraOutlined';
 import { useRef } from 'react';
-import { Button } from '../design-system';
 
-const PHOTO_SIZE = 96;
+const PHOTO_SIZE = 72;
 
-const photoCircleFrameSx = (theme) => ({
-  width: PHOTO_SIZE,
-  height: PHOTO_SIZE,
-  flexShrink: 0,
-  borderRadius: '50%',
-  border: `1px solid ${theme.palette.borderSubtle1}`,
-  overflow: 'hidden',
-});
-
-export function SettingsPhotoField({ avatarSrc, hasCustomPhoto, onSelectFile, onDeletePhoto }) {
+export function SettingsPhotoField({
+  avatarSrc,
+  displayName,
+  roleLabel = 'Admin',
+  onSelectFile,
+}) {
   const theme = useTheme();
   const fileInputRef = useRef(null);
 
@@ -31,74 +28,65 @@ export function SettingsPhotoField({ avatarSrc, hasCustomPhoto, onSelectFile, on
 
   return (
     <>
-      <Stack direction="row" spacing={2.5} alignItems="center">
-        {hasCustomPhoto ? (
-          <Box sx={photoCircleFrameSx(theme)}>
-            <Avatar src={avatarSrc} alt="" sx={{ width: '100%', height: '100%' }} />
-          </Box>
-        ) : (
+      <Stack direction="row" spacing={2} alignItems="center">
+        <Box sx={{ position: 'relative', width: PHOTO_SIZE, height: PHOTO_SIZE, flexShrink: 0 }}>
+          <Avatar
+            src={avatarSrc}
+            alt={displayName}
+            sx={{
+              width: PHOTO_SIZE,
+              height: PHOTO_SIZE,
+              border: `1px solid ${theme.palette.borderSubtle1}`,
+            }}
+          />
+          <IconButton
+            size="small"
+            aria-label="Change photo"
+            onClick={openFilePicker}
+            sx={{
+              position: 'absolute',
+              right: -4,
+              bottom: -4,
+              width: 28,
+              height: 28,
+              backgroundColor: theme.palette.primary.main,
+              color: theme.palette.common.white,
+              border: `2px solid ${theme.palette.surfaceWhite}`,
+              '&:hover': {
+                backgroundColor: theme.palette.primary.dark ?? theme.palette.primary.main,
+              },
+            }}
+          >
+            <PhotoCameraOutlinedIcon sx={{ fontSize: 16 }} />
+          </IconButton>
+        </Box>
+
+        <Stack spacing={0.25} alignItems="flex-start">
+          <Typography sx={{ fontSize: 16, fontWeight: 600, lineHeight: '24px', color: theme.palette.textPrimary }}>
+            {displayName || 'User'}
+          </Typography>
+          <Typography sx={{ fontSize: 14, lineHeight: '20px', color: theme.palette.textSecondary3 }}>{roleLabel}</Typography>
           <Box
             component="button"
             type="button"
             onClick={openFilePicker}
-            aria-label="Add photo"
             sx={{
-              ...photoCircleFrameSx(theme),
-              backgroundColor: theme.palette.surfaceGreySubtle,
+              mt: 0.5,
+              border: 0,
+              background: 'none',
+              p: 0,
               cursor: 'pointer',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              p: 1,
               font: 'inherit',
-              '&:hover': {
-                backgroundColor: theme.palette.borderSubtle1,
-              },
+              fontSize: 14,
+              fontWeight: 500,
+              lineHeight: '20px',
+              color: theme.palette.textBrand,
+              '&:hover': { textDecoration: 'underline' },
             }}
           >
-            <Typography
-              sx={{
-                fontSize: 14,
-                fontWeight: 500,
-                lineHeight: '20px',
-                color: theme.palette.textSecondary2,
-                textAlign: 'center',
-              }}
-            >
-              Add Photo
-            </Typography>
+            Change photo
           </Box>
-        )}
-
-        {hasCustomPhoto ? (
-          <Stack spacing={1} alignItems="flex-start">
-            <Button
-              variant="primary"
-              onClick={openFilePicker}
-              sx={{
-                height: 36,
-                px: 2,
-                minWidth: 140,
-                backgroundColor: theme.palette.textPrimary,
-                borderColor: theme.palette.textPrimary,
-                whiteSpace: 'nowrap',
-                '&:hover': {
-                  backgroundColor: theme.palette.textPrimary,
-                  opacity: 0.92,
-                },
-              }}
-            >
-              Change picture
-            </Button>
-            <Button
-              variant="secondaryGrey"
-              onClick={onDeletePhoto}
-              sx={{ height: 36, px: 2, minWidth: 140, whiteSpace: 'nowrap' }}
-            >
-              Delete picture
-            </Button>
-          </Stack>
-        ) : null}
+        </Stack>
       </Stack>
       <input ref={fileInputRef} type="file" accept="image/*" hidden onChange={handleInputChange} />
     </>

@@ -60,6 +60,14 @@ export default function App() {
         }
       />
       <Route
+        path="/settings/payment-methods"
+        element={
+          <ProtectedRoute>
+            <SettingsPage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
         path="/settings"
         element={
           <ProtectedRoute>

@@ -90,7 +90,7 @@ export function SavedPaymentMethodWidget({ paymentMethod, onAddPaymentMethod }) 
         <Button
           className="change-card-btn"
           variant="tertiaryGrey"
-          onClick={() => navigate('/payment-methods')}
+          onClick={() => navigate('/settings/payment-methods')}
           sx={{
             minWidth: 120,
             opacity: { xs: 1, sm: 0 },

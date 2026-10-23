@@ -1,3 +1,13 @@
+/** Field label above inputs on Settings cards. */
+export function settingsFieldLabelSx(theme) {
+  return {
+    fontSize: 14,
+    fontWeight: 500,
+    lineHeight: '20px',
+    color: theme.palette.textSecondary2,
+  };
+}
+
 /** Outlined fields on Settings — matches Figma 44px input height, 14/10 padding. */
 export function settingsFieldInputSx(theme) {
   return {

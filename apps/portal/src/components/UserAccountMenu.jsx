@@ -8,9 +8,7 @@ import { useTheme } from '@mui/material/styles';
 import ChevronRightIcon from '@mui/icons-material/ChevronRight';
 import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown';
 import LogoutOutlinedIcon from '@mui/icons-material/LogoutOutlined';
-import AttachMoneyOutlinedIcon from '@mui/icons-material/AttachMoneyOutlined';
 import SettingsOutlinedIcon from '@mui/icons-material/SettingsOutlined';
-import UnfoldMoreIcon from '@mui/icons-material/UnfoldMore';
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../auth/AuthContext';
@@ -110,7 +108,7 @@ export function UserAccountMenu() {
           paper: {
             sx: {
               mt: 0,
-              width: 309,
+              width: 289,
               maxWidth: 'calc(100vw - 24px)',
               borderRadius: '8px',
               border: `1px solid ${theme.palette.borderSubtle1}`,
@@ -140,20 +138,10 @@ export function UserAccountMenu() {
               </Typography>
               <Typography sx={{ fontSize: 12, color: '#86868B', lineHeight: 1.4 }}>{roleLabel}</Typography>
             </Box>
-            <UnfoldMoreIcon sx={{ fontSize: 18, color: theme.palette.primary.main, flexShrink: 0 }} />
           </Stack>
         </Box>
 
         <Stack sx={{ px: '14px', py: 2, gap: '10px' }}>
-          <MenuRow
-            icon={<AttachMoneyOutlinedIcon sx={{ fontSize: 20 }} />}
-            label="Payment Method"
-            onClick={() => {
-              close();
-              navigate('/payment-methods');
-            }}
-          />
-          <Divider sx={{ borderColor: theme.palette.borderSubtle1 }} />
           <MenuRow
             icon={<SettingsOutlinedIcon sx={{ fontSize: 20 }} />}
             label="Settings"
