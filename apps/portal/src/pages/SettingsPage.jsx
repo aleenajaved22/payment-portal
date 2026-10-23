@@ -1,5 +1,4 @@
 import Box from '@mui/material/Box';
-import MenuItem from '@mui/material/MenuItem';
 import Stack from '@mui/material/Stack';
 import Typography from '@mui/material/Typography';
 import { useTheme } from '@mui/material/styles';
@@ -10,14 +9,8 @@ import { SettingsFormRow } from '../components/settings/SettingsFormRow';
 import { SettingsPasswordCard } from '../components/settings/SettingsPasswordCard';
 import { SettingsPhotoField } from '../components/settings/SettingsPhotoField';
 import { settingsDisabledFieldSx, settingsFieldInputSx } from '../components/settings/settingsFieldStyles';
-import { Button, Select, TextField } from '../components/design-system';
-import {
-  SelectChevronIcon,
-  drawerSelectMenuProps,
-  selectChevronSx,
-} from '../components/selectChevronProps';
+import { Button, TextField } from '../components/design-system';
 import { useAuth } from '../auth/AuthContext';
-import { COUNTRY_OPTIONS, US_CITY_OPTIONS, US_STATE_OPTIONS } from '../data/settingsFormOptions';
 
 const AVATAR_DEFAULT =
   'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=128&h=128&fit=crop&crop=face';
@@ -52,14 +45,8 @@ export function SettingsPage() {
   const [phone, setPhone] = useState('123 456 7899');
   const [avatarSrc, setAvatarSrc] = useState(AVATAR_DEFAULT);
   const [hasCustomPhoto, setHasCustomPhoto] = useState(false);
-  const [country, setCountry] = useState('US');
-  const [street, setStreet] = useState('Main Bolevard');
-  const [stateRegion, setStateRegion] = useState('Nebraska');
-  const [city, setCity] = useState('Nebraska City');
-  const [postalCode, setPostalCode] = useState('68277');
 
   const fieldSx = settingsFieldInputSx(theme);
-  const selectSx = { ...fieldSx, ...selectChevronSx(theme) };
 
   const handlePhotoSelect = (file) => {
     if (!file?.type.startsWith('image/')) return;
@@ -138,74 +125,6 @@ export function SettingsPage() {
 
             <SettingsFormRow label="Phone">
               <TextField fullWidth value={phone} onChange={(e) => setPhone(e.target.value)} sx={fieldSx} />
-            </SettingsFormRow>
-
-            <SettingsFormRow label="Address (Optional)">
-              <Stack spacing={3}>
-                <Stack direction={{ xs: 'column', sm: 'row' }} spacing={3}>
-                  <Select
-                    fullWidth
-                    value={country}
-                    onChange={(e) => setCountry(e.target.value)}
-                    IconComponent={SelectChevronIcon}
-                    MenuProps={drawerSelectMenuProps(theme)}
-                    sx={selectSx}
-                    renderValue={(value) => {
-                      const option = COUNTRY_OPTIONS.find((item) => item.value === value);
-                      return (
-                        <Stack direction="row" spacing={1} alignItems="center">
-                          <Typography component="span" sx={{ fontSize: 16, lineHeight: 1 }}>
-                            {option?.flag}
-                          </Typography>
-                          <Typography sx={{ fontSize: 16, lineHeight: '24px' }}>{option?.label}</Typography>
-                        </Stack>
-                      );
-                    }}
-                  >
-                    {COUNTRY_OPTIONS.map((option) => (
-                      <MenuItem key={option.value} value={option.value}>
-                        {option.flag} {option.label}
-                      </MenuItem>
-                    ))}
-                  </Select>
-                  <TextField fullWidth value={street} onChange={(e) => setStreet(e.target.value)} sx={fieldSx} />
-                </Stack>
-
-                <Stack direction={{ xs: 'column', sm: 'row' }} spacing={3}>
-                  <Select
-                    fullWidth
-                    value={stateRegion}
-                    onChange={(e) => setStateRegion(e.target.value)}
-                    IconComponent={SelectChevronIcon}
-                    MenuProps={drawerSelectMenuProps(theme)}
-                    sx={selectSx}
-                  >
-                    {US_STATE_OPTIONS.map((option) => (
-                      <MenuItem key={option} value={option}>
-                        {option}
-                      </MenuItem>
-                    ))}
-                  </Select>
-                  <Select
-                    fullWidth
-                    value={city}
-                    onChange={(e) => setCity(e.target.value)}
-                    IconComponent={SelectChevronIcon}
-                    MenuProps={drawerSelectMenuProps(theme)}
-                    sx={selectSx}
-                  >
-                    {US_CITY_OPTIONS.map((option) => (
-                      <MenuItem key={option} value={option}>
-                        {option}
-                      </MenuItem>
-                    ))}
-                  </Select>
-                </Stack>
-
-                <Box sx={{ maxWidth: { sm: 'calc(50% - 12px)' } }}>
-                  <TextField fullWidth value={postalCode} onChange={(e) => setPostalCode(e.target.value)} sx={fieldSx} />
-                </Box>
-              </Stack>
             </SettingsFormRow>
 
             <SettingsPasswordCard onUpdatePassword={() => {}} />
