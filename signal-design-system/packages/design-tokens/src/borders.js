@@ -40,7 +40,7 @@ export const color = {
  * Intentionally separate from semantic palette borders.
  */
 export const overrideColor = {
-  inputDefault: '#D0CFD2',
+  inputDefault: '#E6E6E7',
   inputHover: '#AEAEB2',
   inputFocus: '#2DA551',
   /** TextField / destructiveSecondary — same as color.formError. */
@@ -58,7 +58,7 @@ export const overrideColor = {
 
 /** Shorthand borders matching override / semantic strings. */
 export const style = {
-  inputDefault: '1px solid #D0CFD2',
+  inputDefault: '1px solid #E6E6E7',
   inputFocus: '1px solid #2DA551',
   inputError: '1px solid #DF372B',
   /** Component-specific Select-family focus. */

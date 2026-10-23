@@ -28,7 +28,7 @@ function nameFromEmail(email) {
 }
 
 export function TeamProvider({ children }) {
-  const { session } = useAuth();
+  const { session, updateSessionProfile } = useAuth();
   const [users, setUsers] = useState(mockUsers);
 
   /**
@@ -83,20 +83,44 @@ export function TeamProvider({ children }) {
     );
   }, []);
 
-  const updateUser = useCallback((userId, { name, roleId, franchises, sites }) => {
-    setUsers((previous) =>
-      previous.map((user) => {
-        if (user.id !== userId) return user;
-        return {
-          ...user,
-          name: name?.trim() || user.name,
-          roleId: roleId ?? user.roleId,
-          franchises: franchises ?? user.franchises ?? [],
-          sites: sites ?? user.sites ?? [],
-        };
-      }),
-    );
-  }, []);
+  const updateUser = useCallback(
+    (userId, { name, roleId, franchises, sites }) => {
+      const sessionEmail = session?.email?.trim().toLowerCase();
+      const rosterUser = roster.find((user) => user.id === userId);
+      const isSelf =
+        userId === 'u-self' ||
+        Boolean(
+          sessionEmail &&
+            rosterUser?.email &&
+            rosterUser.email.toLowerCase() === sessionEmail,
+        );
+
+      if (userId === 'u-self' || !users.some((user) => user.id === userId)) {
+        if (isSelf && name?.trim()) {
+          updateSessionProfile({ name: name.trim() });
+        }
+        return;
+      }
+
+      setUsers((previous) =>
+        previous.map((user) => {
+          if (user.id !== userId) return user;
+          return {
+            ...user,
+            name: name?.trim() || user.name,
+            roleId: roleId ?? user.roleId,
+            franchises: franchises ?? user.franchises ?? [],
+            sites: sites ?? user.sites ?? [],
+          };
+        }),
+      );
+
+      if (isSelf && name?.trim()) {
+        updateSessionProfile({ name: name.trim() });
+      }
+    },
+    [roster, session?.email, updateSessionProfile, users],
+  );
 
   const removeUser = useCallback((userId) => {
     setUsers((previous) => previous.filter((user) => user.id !== userId));

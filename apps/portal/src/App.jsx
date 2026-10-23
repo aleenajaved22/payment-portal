@@ -5,6 +5,7 @@ import { InvoicePaymentPage } from './pages/InvoicePaymentPage';
 import { LoginPage } from './pages/LoginPage';
 import { PaymentMethodsPage } from './pages/PaymentMethodsPage';
 import { ReportsPage } from './pages/ReportsPage';
+import { SettingsPage } from './pages/SettingsPage';
 import { UserManagementPage } from './pages/UserManagementPage';
 import { useAuth } from './auth/AuthContext';
 
@@ -55,6 +56,14 @@ export default function App() {
         element={
           <ProtectedRoute>
             <UserManagementPage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/settings"
+        element={
+          <ProtectedRoute>
+            <SettingsPage />
           </ProtectedRoute>
         }
       />

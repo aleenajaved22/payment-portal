@@ -17,17 +17,31 @@ const SEED_METHODS = [
     details: { routingNumber: '021000021', accountLast4: '6789', accountHolderName: 'Alina Morgan' },
   },
   {
-    id: 'seed-paypal',
-    typeId: 'paypal',
-    details: { email: 'alina.morgan@example.com' },
+    id: 'seed-google-pay',
+    typeId: 'google-pay',
+    details: { email: 'alina.morgan@gmail.com', accountHolderName: 'Alina Morgan' },
+  },
+  {
+    id: 'seed-apple-pay',
+    typeId: 'apple-pay',
+    details: { email: 'alina.morgan@icloud.com', accountHolderName: 'Alina Morgan' },
   },
 ];
 
+function buildStoredSeedMethod(seed) {
+  const summary = buildPaymentMethodSummary(seed.typeId, seed.details);
+  return { ...seed, label: summary.label, subtitle: summary.subtitle, createdAt: null };
+}
+
+/** One demo method per type when local storage predates a newly added category. */
+export function mergeMissingSeedPaymentMethods(methods = []) {
+  const existingTypes = new Set(methods.map((method) => method.typeId));
+  const additions = SEED_METHODS.filter((seed) => !existingTypes.has(seed.typeId)).map(buildStoredSeedMethod);
+  return additions.length ? [...methods, ...additions] : methods;
+}
+
 export function getDefaultPaymentMethodsState() {
-  const methods = SEED_METHODS.map((seed) => {
-    const summary = buildPaymentMethodSummary(seed.typeId, seed.details);
-    return { ...seed, label: summary.label, subtitle: summary.subtitle, createdAt: null };
-  });
+  const methods = SEED_METHODS.map(buildStoredSeedMethod);
 
   return {
     methods,

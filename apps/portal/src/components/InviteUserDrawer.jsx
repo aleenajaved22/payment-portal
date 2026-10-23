@@ -1,25 +1,19 @@
 import Box from '@mui/material/Box';
 import Divider from '@mui/material/Divider';
 import IconButton from '@mui/material/IconButton';
-import MenuItem from '@mui/material/MenuItem';
-import ListItemText from '@mui/material/ListItemText';
 import Stack from '@mui/material/Stack';
 import Typography from '@mui/material/Typography';
 import { useTheme } from '@mui/material/styles';
 import CloseIcon from '@mui/icons-material/Close';
 import { primitive } from '@signal/design-tokens/colors';
 import { useEffect, useMemo, useState } from 'react';
-import { Button, Drawer, Select, TextField } from './design-system';
+import { Button, Drawer, TextField } from './design-system';
 import { MultiSelectWithChips } from './MultiSelectWithChips';
-import {
-  SelectChevronIcon,
-  drawerSelectFieldSx,
-  drawerSelectMenuProps,
-} from './selectChevronProps';
 import { FRANCHISE_OPTIONS, getSitesForFranchises } from '../data/franchiseSiteCatalog';
-import { USER_ROLES } from '../data/mockUsers';
 
-const DRAWER_WIDTH = 'min(580px, 96vw)';
+const DEFAULT_INVITE_ROLE_LABEL = 'Viewer';
+
+const DRAWER_WIDTH = 'min(610px, 96vw)';
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
 
 const fieldInputSx = (theme) => ({
@@ -39,7 +33,11 @@ const fieldInputSx = (theme) => ({
   },
 });
 
-function FieldLabel({ children, htmlFor }) {
+function combineDisplayName(firstName, lastName) {
+  return [firstName, lastName].map((part) => part.trim()).filter(Boolean).join(' ');
+}
+
+function FieldLabel({ children, htmlFor, required = false }) {
   const theme = useTheme();
   return (
     <Typography
@@ -55,6 +53,11 @@ function FieldLabel({ children, htmlFor }) {
       }}
     >
       {children}
+      {required ? (
+        <Box component="span" sx={{ color: theme.palette.textAlert, ml: 0.25 }} aria-hidden="true">
+          *
+        </Box>
+      ) : null}
     </Typography>
   );
 }
@@ -64,22 +67,22 @@ function FieldLabel({ children, htmlFor }) {
  */
 export function InviteUserDrawer({ open, onClose, onInvite, emailInUse }) {
   const theme = useTheme();
-  const [name, setName] = useState('');
+  const [firstName, setFirstName] = useState('');
+  const [lastName, setLastName] = useState('');
   const [email, setEmail] = useState('');
   const [franchises, setFranchises] = useState([]);
   const [sites, setSites] = useState([]);
-  const [roleLabel, setRoleLabel] = useState('');
   const [error, setError] = useState(null);
 
   const siteOptions = useMemo(() => getSitesForFranchises(franchises), [franchises]);
 
   useEffect(() => {
     if (!open) return;
-    setName('');
+    setFirstName('');
+    setLastName('');
     setEmail('');
     setFranchises([]);
     setSites([]);
-    setRoleLabel('');
     setError(null);
   }, [open]);
 
@@ -89,14 +92,13 @@ export function InviteUserDrawer({ open, onClose, onInvite, emailInUse }) {
 
   const submit = () => {
     const trimmedEmail = email.trim();
-    if (!name.trim()) return setError('Name is required');
-    if (!roleLabel) return setError('Role is required');
+    if (!firstName.trim()) return setError('First name is required');
     if (!trimmedEmail) return setError('Email address is required');
     if (!EMAIL_PATTERN.test(trimmedEmail)) return setError('Enter a valid email address');
     if (emailInUse?.(trimmedEmail)) return setError('Someone with this email is already on the account');
 
-    const displayName = name.trim();
-    onInvite(trimmedEmail, roleLabel, displayName, { franchises, sites });
+    const displayName = combineDisplayName(firstName, lastName);
+    onInvite(trimmedEmail, DEFAULT_INVITE_ROLE_LABEL, displayName, { franchises, sites });
     onClose();
     return undefined;
   };
@@ -178,65 +180,41 @@ export function InviteUserDrawer({ open, onClose, onInvite, emailInUse }) {
           <Stack spacing={3}>
             <Stack direction={{ xs: 'column', sm: 'row' }} spacing={3} alignItems={{ sm: 'flex-start' }}>
               <Box sx={{ flex: 1, minWidth: 0 }}>
-                <FieldLabel htmlFor="invite-name">Name</FieldLabel>
+                <FieldLabel htmlFor="invite-first-name" required>
+                  First Name
+                </FieldLabel>
                 <TextField
-                  id="invite-name"
+                  id="invite-first-name"
                   fullWidth
-                  placeholder="Type name"
-                  value={name}
+                  placeholder="Type first name"
+                  value={firstName}
                   onChange={(event) => {
-                    setName(event.target.value);
+                    setFirstName(event.target.value);
                     if (error) setError(null);
                   }}
                   sx={fieldInputSx(theme)}
                 />
               </Box>
               <Box sx={{ flex: 1, minWidth: 0 }}>
-                <FieldLabel htmlFor="invite-role">Role</FieldLabel>
-                <Select
-                  id="invite-role"
+                <FieldLabel htmlFor="invite-last-name">Last Name</FieldLabel>
+                <TextField
+                  id="invite-last-name"
                   fullWidth
-                  displayEmpty
-                  IconComponent={SelectChevronIcon}
-                  MenuProps={drawerSelectMenuProps(theme)}
-                  value={roleLabel}
+                  placeholder="Type last name"
+                  value={lastName}
                   onChange={(event) => {
-                    setRoleLabel(event.target.value);
+                    setLastName(event.target.value);
                     if (error) setError(null);
                   }}
-                  renderValue={(selected) =>
-                    selected || (
-                      <Typography component="span" sx={{ color: theme.palette.textPlaceholderField }}>
-                        Select role
-                      </Typography>
-                    )
-                  }
-                  sx={drawerSelectFieldSx(theme, fieldInputSx)}
-                >
-                  {USER_ROLES.map((role) => (
-                    <MenuItem key={role.id} value={role.label}>
-                      <ListItemText
-                        primary={role.label}
-                        secondary={role.summary}
-                        primaryTypographyProps={{
-                          fontSize: 14,
-                          fontWeight: 500,
-                          color: theme.palette.textPrimary,
-                        }}
-                        secondaryTypographyProps={{
-                          fontSize: 12,
-                          lineHeight: '18px',
-                          color: theme.palette.textSecondary3,
-                        }}
-                      />
-                    </MenuItem>
-                  ))}
-                </Select>
+                  sx={fieldInputSx(theme)}
+                />
               </Box>
             </Stack>
 
-            <Box>
-              <FieldLabel htmlFor="invite-email">Email</FieldLabel>
+            <Box sx={{ width: '100%', maxWidth: '100%', alignSelf: 'stretch' }}>
+              <FieldLabel htmlFor="invite-email" required>
+                Email
+              </FieldLabel>
               <TextField
                 id="invite-email"
                 fullWidth
@@ -273,6 +251,7 @@ export function InviteUserDrawer({ open, onClose, onInvite, emailInUse }) {
                 <MultiSelectWithChips
                   id="invite-franchises"
                   label="Franchise"
+                  required
                   placeholder="Select Franchise"
                   options={FRANCHISE_OPTIONS}
                   value={franchises}
@@ -282,6 +261,7 @@ export function InviteUserDrawer({ open, onClose, onInvite, emailInUse }) {
                 <MultiSelectWithChips
                   id="invite-sites"
                   label="Sites"
+                  required
                   placeholder={franchises.length === 0 ? 'Select a franchise first' : 'Select Site'}
                   options={siteOptions}
                   value={sites}

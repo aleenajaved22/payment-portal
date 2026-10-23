@@ -4,6 +4,7 @@ import Typography from '@mui/material/Typography';
 import { useTheme } from '@mui/material/styles';
 import CheckRoundedIcon from '@mui/icons-material/CheckRounded';
 import CreditCardOutlinedIcon from '@mui/icons-material/CreditCardOutlined';
+import { ContractSummaryRow } from './ContractSummaryRow';
 import { PAGE_GUTTER } from './DashboardGrid';
 import { formatMMDDYY } from '../../data/mockInvoices';
 import { Button } from '../design-system';
@@ -280,7 +281,7 @@ function ServiceActivity({ subscription, onManage }) {
  * schedule; per-service contracts show what's been done and billed. Everything
  * shown is contract data; nothing is invented.
  */
-export function PlanCard({ subscription, paymentMethod, onManage }) {
+export function PlanCard({ subscription, paymentMethod, onManage, contractSummary }) {
   const theme = useTheme();
   const isRecurring = subscription.planType === 'recurring';
 
@@ -288,17 +289,27 @@ export function PlanCard({ subscription, paymentMethod, onManage }) {
     <Box
       sx={{
         display: 'flex',
-        flexDirection: { xs: 'column', md: 'row' },
+        flexDirection: 'column',
         alignItems: 'stretch',
         borderBottom: `1px solid ${theme.palette.borderSubtle1}`,
       }}
     >
+      {contractSummary ? <ContractSummaryRow {...contractSummary} /> : null}
+      <Box
+        sx={{
+          display: 'flex',
+          flexDirection: { xs: 'column', md: 'row' },
+          alignItems: 'stretch',
+          width: '100%',
+        }}
+      >
       <PlanFace subscription={subscription} paymentMethod={paymentMethod} />
       {isRecurring ? (
         <BillingSchedule subscription={subscription} onManage={onManage} />
       ) : (
         <ServiceActivity subscription={subscription} onManage={onManage} />
       )}
+      </Box>
     </Box>
   );
 }

@@ -4,8 +4,11 @@ import { useTheme } from '@mui/material/styles';
 import SearchRoundedIcon from '@mui/icons-material/SearchRounded';
 import ArrowForwardIcon from '@mui/icons-material/ArrowForward';
 import { FilterSelect } from './FilterSelect';
+import { ToolbarDateRangeField } from './ToolbarDateRangeField';
 import { Button, Search } from './design-system';
+import { toolbarSearchFieldSx, toolbarSearchIconSx } from './toolbarSearchFieldSx';
 import { invoiceSiteFilterOptions, invoiceStatusFilterOptions } from '../data/mockInvoices';
+import { weekFilterOptions } from '../data/mockReports';
 
 const SEARCH_PLACEHOLDER = 'Search by invoice no.';
 
@@ -16,11 +19,14 @@ export function InvoicesToolbar({
   onSiteChange,
   status,
   onStatusChange,
+  week,
+  onWeekChange,
+  dateRangeLabel,
+  dateRange,
   showPayNow = false,
   onPayNow,
 }) {
   const theme = useTheme();
-  const searchWidthCh = Math.max(SEARCH_PLACEHOLDER.length, query.length);
 
   return (
     <Stack
@@ -32,8 +38,9 @@ export function InvoicesToolbar({
     >
       <Stack
         direction={{ xs: 'column', md: 'row' }}
-        spacing={{ xs: 2, md: 1 }}
+        spacing={{ xs: 2, md: 1.5 }}
         alignItems={{ xs: 'stretch', md: 'center' }}
+        sx={{ minWidth: 0, flexWrap: { md: 'nowrap' } }}
       >
         <Search
           placeholder="Search by invoice no."
@@ -41,67 +48,66 @@ export function InvoicesToolbar({
           size="small"
           value={query}
           onChange={(e) => onQueryChange(e.target.value)}
-          sx={{
-            width: {
-              xs: '100%',
-              md: `calc(${searchWidthCh}ch + 2.75rem)`,
-            },
-            flexShrink: 0,
-            '& .MuiOutlinedInput-root': {
-              borderRadius: '20px',
-              backgroundColor: theme.palette.surfaceWhite,
-              height: 36,
-            },
-            '& .MuiOutlinedInput-input': {
-              minWidth: `${searchWidthCh}ch`,
-              fontSize: 14,
-              fontWeight: 500,
-              '&::placeholder': {
-                fontSize: 14,
-                fontWeight: 400,
-                lineHeight: '20px',
-                color: theme.palette.textPlaceholderField,
-                opacity: 1,
-              },
-            },
-            '& .MuiOutlinedInput-notchedOutline': {
-              borderColor: theme.palette.borderSubtle2,
-            },
-          }}
+          sx={toolbarSearchFieldSx(theme, { placeholder: SEARCH_PLACEHOLDER, query })}
           InputProps={{
             startAdornment: (
               <InputAdornment position="start">
-                <SearchRoundedIcon sx={{ fontSize: 18, color: theme.palette.textSecondary2 }} />
+                <SearchRoundedIcon sx={toolbarSearchIconSx(theme)} />
               </InputAdornment>
             ),
           }}
         />
 
-        <Stack direction="row" spacing={0.5} flexWrap="wrap" alignItems="center">
-          <FilterSelect label="Sites" value={site} onChange={onSiteChange} options={invoiceSiteFilterOptions} />
+        <Stack direction="row" spacing={0.5} flexWrap="wrap" alignItems="center" sx={{ flexShrink: 0 }}>
+          <FilterSelect
+            label="Sites"
+            value={site}
+            onChange={onSiteChange}
+            options={invoiceSiteFilterOptions}
+            searchable
+            searchPlaceholder="Search sites"
+          />
           <FilterSelect
             label="Status"
             value={status}
             onChange={onStatusChange}
             options={invoiceStatusFilterOptions}
+            clearFirstOption={false}
+          />
+          <FilterSelect
+            label="Date range"
+            value={week}
+            onChange={onWeekChange}
+            options={weekFilterOptions}
+            clearFirstOption={false}
           />
         </Stack>
       </Stack>
 
-      {/* Always present, but inert until the customer selects invoices to pay. */}
-      <Button
-        variant="primary"
-        onClick={onPayNow}
-        disabled={!showPayNow}
-        endIcon={<ArrowForwardIcon sx={{ fontSize: 18 }} />}
-        sx={{
-          alignSelf: { xs: 'flex-start', md: 'center' },
-          minWidth: 105,
-          '& .MuiButton-endIcon': { ml: 0.75 },
-        }}
-      >
-        Pay Now
-      </Button>
+      <Stack direction="row" alignItems="center" spacing={1} sx={{ flexShrink: 0 }}>
+        {/* Always present, but inert until the customer selects invoices to pay. */}
+        <Button
+          variant="primary"
+          onClick={onPayNow}
+          disabled={!showPayNow}
+          endIcon={<ArrowForwardIcon sx={{ fontSize: 18 }} />}
+          sx={{
+            minWidth: 105,
+            '& .MuiButton-endIcon': { ml: 0.75 },
+          }}
+        >
+          Pay Now
+        </Button>
+
+        <ToolbarDateRangeField
+          displayValue={dateRangeLabel}
+          ariaLabel="Due date range in view"
+          presetOptions={weekFilterOptions}
+          activePreset={week || null}
+          onPresetChange={onWeekChange}
+          range={dateRange}
+        />
+      </Stack>
     </Stack>
   );
 }

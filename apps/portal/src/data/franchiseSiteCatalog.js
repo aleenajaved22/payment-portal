@@ -35,6 +35,20 @@ export const SITES_BY_FRANCHISE = {
   ],
 };
 
+export const ALL_FRANCHISES_FILTER = 'All franchises';
+
+export const userFranchiseFilterOptions = [ALL_FRANCHISES_FILTER, ...FRANCHISE_OPTIONS];
+
+/** Toolbar site filter — scoped to the selected franchise when one is chosen. */
+export function getUserSiteFilterOptions(franchiseFilter) {
+  const allSitesLabel = 'All sites';
+  const franchises =
+    franchiseFilter && franchiseFilter !== ALL_FRANCHISES_FILTER
+      ? [franchiseFilter]
+      : FRANCHISE_OPTIONS;
+  return [allSitesLabel, ...getSitesForFranchises(franchises)];
+}
+
 export function getSitesForFranchises(franchiseNames) {
   const selected = franchiseNames ?? [];
   if (selected.length === 0) return [];

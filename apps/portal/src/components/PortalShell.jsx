@@ -10,9 +10,10 @@ const NAV_ITEMS = [
   { label: 'Dashboard', value: 'dashboard', path: '/dashboard' },
   { label: 'Reports', value: 'reports', path: '/reports' },
   { label: 'Payments', value: 'invoice-payment', path: '/invoice-payment' },
+  { label: 'Customer Management', value: 'user-management', path: '/users' },
 ];
 
-/** `activeNav` matches a top tab value, or `false` when the page is not in the main nav (e.g. User Management). */
+/** `activeNav` matches a top tab value, or `false` when the page is not in the main nav. */
 export function PortalShell({ activeNav = 'reports', banner, mainSx, children }) {
   const theme = useTheme();
   const navigate = useNavigate();

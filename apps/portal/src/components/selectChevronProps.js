@@ -4,6 +4,10 @@ import { primitive } from '@signal/design-tokens/colors';
 /** Outlined full-width selects in drawers — Figma chevron-down (20px). */
 export const SelectChevronIcon = KeyboardArrowDownIcon;
 
+/** Filter menus, select panels, and toolbar date popovers — lighter than MUI shadow 8. */
+export const dropdownMenuPaperShadow =
+  '0 1px 2px rgba(16, 24, 40, 0.04), 0 4px 12px rgba(16, 24, 40, 0.05)';
+
 export function selectChevronSx(theme) {
   return {
     '& .MuiSelect-select': {
@@ -34,7 +38,7 @@ export function drawerSelectMenuProps(theme) {
         mt: 0.5,
         borderRadius: '8px',
         border: `1px solid ${theme.palette.borderSubtle1}`,
-        boxShadow: theme.shadows?.[8] ?? '0 8px 24px rgba(0,0,0,0.12)',
+        boxShadow: dropdownMenuPaperShadow,
         maxHeight: 320,
         '& .MuiMenuItem-root': {
           alignItems: 'flex-start',
@@ -64,10 +68,10 @@ export function drawerSelectFieldSx(theme, fieldInputSx) {
     ...fieldInputSx(theme),
     ...selectChevronSx(theme),
     '& .MuiOutlinedInput-notchedOutline': {
-      borderColor: theme.palette.borderSubtle2,
+      borderColor: theme.palette.borderSubtle1,
     },
     '&:hover .MuiOutlinedInput-notchedOutline': {
-      borderColor: theme.palette.borderSubtle2,
+      borderColor: theme.palette.borderSubtle1,
     },
     '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
       borderColor: `${primitive.blue[500]} !important`,

@@ -32,14 +32,24 @@ export function AuthProvider({ children }) {
     setSession(null);
   }, []);
 
+  const updateSessionProfile = useCallback((patch) => {
+    setSession((current) => {
+      if (!current) return current;
+      const next = { ...current, ...patch };
+      setStoredSession(next);
+      return next;
+    });
+  }, []);
+
   const value = useMemo(
     () => ({
       session,
       isAuthenticated: Boolean(session?.email),
       login,
       logout,
+      updateSessionProfile,
     }),
-    [session, login, logout],
+    [session, login, logout, updateSessionProfile],
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

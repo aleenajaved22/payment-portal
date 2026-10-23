@@ -11,7 +11,7 @@ import { useTheme } from '@mui/material/styles';
 import CloseIcon from '@mui/icons-material/Close';
 import { useMemo, useRef, useState } from 'react';
 import { Checkbox, TextField } from './design-system';
-import { SelectChevronIcon } from './selectChevronProps';
+import { SelectChevronIcon, dropdownMenuPaperShadow } from './selectChevronProps';
 import { primitive } from '@signal/design-tokens/colors';
 
 const fieldTriggerSx = (theme) => ({
@@ -78,6 +78,7 @@ export function MultiSelectWithChips({
   value,
   onChange,
   disabled = false,
+  required = false,
   id,
 }) {
   const theme = useTheme();
@@ -125,6 +126,11 @@ export function MultiSelectWithChips({
           }}
         >
           {label}
+          {required ? (
+            <Box component="span" sx={{ color: theme.palette.textAlert, ml: 0.25 }} aria-hidden="true">
+              *
+            </Box>
+          ) : null}
         </Typography>
       ) : null}
 
@@ -181,7 +187,7 @@ export function MultiSelectWithChips({
               maxHeight: 360,
               borderRadius: '8px',
               border: `1px solid ${theme.palette.borderSubtle1}`,
-              boxShadow: theme.shadows?.[8] ?? '0 8px 24px rgba(0,0,0,0.12)',
+              boxShadow: dropdownMenuPaperShadow,
             },
           },
         }}

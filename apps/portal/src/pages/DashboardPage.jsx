@@ -9,6 +9,7 @@ import { DemoControls } from '../components/DemoControls';
 import { PaymentConfirmationToast } from '../components/PaymentConfirmationToast';
 import { PaymentMethodModal } from '../components/PaymentMethodModal';
 import { GridRow, PAGE_GUTTER } from '../components/dashboard/DashboardGrid';
+import { PlanCard } from '../components/dashboard/PlanCard';
 import { FilterMixPanel } from '../components/dashboard/FilterMixPanel';
 import { PaymentMethodPanel } from '../components/dashboard/PaymentMethodPanel';
 import { OutstandingPanel } from '../components/dashboard/OutstandingPanel';
@@ -21,7 +22,7 @@ import { downloadReport } from '../data/reportFilters';
 import { formatInvoiceTotal, invoiceSiteFilterOptions, sumInvoiceAmounts } from '../data/mockInvoices';
 import { getLastPayment, getMoneyTotals, getUnpaidInvoicesSorted } from '../data/dashboardMetrics';
 import { getFilterMix } from '../data/filterUsage';
-import { getSubscription } from '../data/subscriptionMock';
+import { getContractSummary, getSubscription } from '../data/subscriptionMock';
 
 /**
  * Newest first, full stop. The panel is about recency, so "new" is a badge on a
@@ -57,7 +58,11 @@ export function DashboardPage() {
   /** Survives the dialog closing, which is the point of it. */
   const [lastPayment, setLastPayment] = useState(null);
 
-  const subscription = useMemo(() => getSubscription(site), [site]);
+  const subscription = useMemo(() => (site ? getSubscription(site) : null), [site]);
+  const contractSummary = useMemo(
+    () => (site && subscription ? getContractSummary(site, subscription) : null),
+    [site, subscription],
+  );
 
   const scopedInvoices = useMemo(
     () => (site ? allInvoices.filter((invoice) => invoice.site === site) : allInvoices),
@@ -125,7 +130,7 @@ export function DashboardPage() {
             component="h1"
             sx={{ fontSize: 22, fontWeight: 700, lineHeight: '30px', color: theme.palette.textPrimary }}
           >
-            Hi {firstName}, welcome back 👋
+            Hi {firstName}, Welcome Back 👋
           </Typography>
           <Typography sx={{ mt: 0.25, fontSize: 14, color: theme.palette.textSecondary2 }}>
             Here's what needs your attention today.
@@ -139,10 +144,26 @@ export function DashboardPage() {
               backgroundColor: theme.palette.surfaceWhite,
             }}
           >
-            <FilterSelect label="All sites" value={site} onChange={setSite} options={invoiceSiteFilterOptions} />
+            <FilterSelect
+              label="All sites"
+              value={site}
+              onChange={setSite}
+              options={invoiceSiteFilterOptions}
+              searchable
+              searchPlaceholder="Search sites"
+            />
           </Box>
         </Box>
       </Box>
+
+      {site && subscription ? (
+        <PlanCard
+          subscription={subscription}
+          contractSummary={contractSummary}
+          paymentMethod={defaultMethod?.subtitle}
+          onManage={() => navigate('/payment-methods')}
+        />
+      ) : null}
 
       {/* Two columns, not two bands: the money is one continuous surface, so it
           runs the full height beside a stack of the three supporting panels. */}

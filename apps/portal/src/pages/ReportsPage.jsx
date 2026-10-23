@@ -8,6 +8,7 @@ import ChevronRightIcon from '@mui/icons-material/ChevronRight';
 import { useEffect, useMemo, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { PortalShell } from '../components/PortalShell';
+import { ReportDetailDrawer } from '../components/ReportDetailDrawer';
 import { ReportsToolbar } from '../components/ReportsToolbar';
 import { EmptyState, ReportsTable } from '../components/design-system';
 import { useReports } from '../context/ReportsContext';
@@ -33,6 +34,8 @@ export function ReportsPage() {
   const [page, setPage] = useState(0);
   const [sortField, setSortField] = useState('day');
   const [sortDirection, setSortDirection] = useState('asc');
+  const [selectedIds, setSelectedIds] = useState([]);
+  const [drawerReport, setDrawerReport] = useState(null);
 
   const dateRange = useMemo(() => getReportDateRange(week), [week]);
 
@@ -93,6 +96,12 @@ export function ReportsPage() {
       if (sortField === 'date') {
         aVal = parseInvoiceDate(aVal)?.getTime() ?? 0;
         bVal = parseInvoiceDate(bVal)?.getTime() ?? 0;
+      } else if (sortField === 'company') {
+        aVal = (aVal ?? '').toLowerCase();
+        bVal = (bVal ?? '').toLowerCase();
+      } else if (typeof aVal === 'string' && typeof bVal === 'string') {
+        aVal = aVal.toLowerCase();
+        bVal = bVal.toLowerCase();
       }
       if (aVal < bVal) return sortDirection === 'asc' ? -1 : 1;
       if (aVal > bVal) return sortDirection === 'asc' ? 1 : -1;
@@ -122,6 +131,35 @@ export function ReportsPage() {
     }
   };
 
+  const handleToggleRow = (reportId) => {
+    setSelectedIds((prev) =>
+      prev.includes(reportId) ? prev.filter((id) => id !== reportId) : [...prev, reportId],
+    );
+  };
+
+  const handleToggleAll = (checked) => {
+    const pageIds = pagedReports.map((report) => report.id);
+    setSelectedIds((prev) => {
+      if (checked) {
+        return [...new Set([...prev, ...pageIds])];
+      }
+      return prev.filter((id) => !pageIds.includes(id));
+    });
+  };
+
+  const handleBulkDownload = () => {
+    reports
+      .filter((report) => selectedIds.includes(report.id))
+      .forEach((report) => downloadReport(report));
+  };
+
+  const openReportDrawer = (report) => {
+    if (report?.isNew) markReportRead(report.id);
+    setDrawerReport(report);
+  };
+
+  const closeReportDrawer = () => setDrawerReport(null);
+
   return (
     <PortalShell activeNav="reports">
       <Stack spacing={2.5}>
@@ -135,9 +173,12 @@ export function ReportsPage() {
           week={week}
           onWeekChange={setWeek}
           dateRangeLabel={dateRangeLabel}
+          dateRange={dateRange}
+          selectedCount={selectedIds.length}
+          onBulkDownload={handleBulkDownload}
         />
 
-        <Box sx={{ pt: 0.5 }}>
+        <Box sx={{ pt: 0.5, width: '100%', maxWidth: '100%', overflow: 'hidden' }}>
           {pagedReports.length === 0 ? (
             <EmptyState
               title="No reports found"
@@ -150,7 +191,11 @@ export function ReportsPage() {
                 sortField={sortField}
                 sortDirection={sortDirection}
                 onSort={handleSort}
+                onOpenReport={openReportDrawer}
                 onDownload={downloadReport}
+                selectedIds={selectedIds}
+                onToggleRow={handleToggleRow}
+                onToggleAll={handleToggleAll}
               />
 
               <Stack direction="row" alignItems="center" justifyContent="flex-end" spacing={1.25} sx={{ pt: 2 }}>
@@ -192,6 +237,13 @@ export function ReportsPage() {
           )}
         </Box>
       </Stack>
+
+      <ReportDetailDrawer
+        open={Boolean(drawerReport)}
+        report={drawerReport}
+        onClose={closeReportDrawer}
+        onDownload={downloadReport}
+      />
     </PortalShell>
   );
 }

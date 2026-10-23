@@ -69,6 +69,13 @@ export function formatDigits(value, maxLength) {
   return maxLength ? digits.slice(0, maxLength) : digits;
 }
 
+/** Card expiry as one control: up to four digits shown as MM/YY. */
+export function formatCardExpiry(value) {
+  const digits = digitsOnly(value).slice(0, 4);
+  if (digits.length <= 2) return digits;
+  return `${digits.slice(0, 2)}/${digits.slice(2)}`;
+}
+
 /** Amex asks for a 4-digit CID; the rest want 3. */
 export function cvvLengthFor(cardNumber) {
   return detectCardBrand(cardNumber) === 'amex' ? 4 : 3;
@@ -136,6 +143,22 @@ function validatePaypal(form) {
   return errors;
 }
 
+function validateGooglePay(form) {
+  const errors = {};
+  if (!trimmed(form.email)) errors.email = 'Google account email is required';
+  else if (!isEmail(form.email)) errors.email = 'Enter a valid email address';
+  if (!trimmed(form.accountHolderName)) errors.accountHolderName = 'Account holder name is required';
+  return errors;
+}
+
+function validateApplePay(form) {
+  const errors = {};
+  if (!trimmed(form.email)) errors.email = 'Apple ID email is required';
+  else if (!isEmail(form.email)) errors.email = 'Enter a valid email address';
+  if (!trimmed(form.accountHolderName)) errors.accountHolderName = 'Billing name is required';
+  return errors;
+}
+
 /**
  * Validate one method's form. Returns a `{ field: message }` map, empty when the
  * form is good. Credit card expiry reports against a single `expiry` key because
@@ -149,6 +172,10 @@ export function validatePaymentForm(typeId, form = {}, now = new Date()) {
       return validateAch(form);
     case 'paypal':
       return validatePaypal(form);
+    case 'google-pay':
+      return validateGooglePay(form);
+    case 'apple-pay':
+      return validateApplePay(form);
     default:
       return {};
   }

@@ -8,8 +8,8 @@ import { useTheme } from '@mui/material/styles';
 import ChevronRightIcon from '@mui/icons-material/ChevronRight';
 import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown';
 import LogoutOutlinedIcon from '@mui/icons-material/LogoutOutlined';
-import CreditCardOutlinedIcon from '@mui/icons-material/CreditCardOutlined';
-import PersonOutlinedIcon from '@mui/icons-material/PersonOutlined';
+import AttachMoneyOutlinedIcon from '@mui/icons-material/AttachMoneyOutlined';
+import SettingsOutlinedIcon from '@mui/icons-material/SettingsOutlined';
 import UnfoldMoreIcon from '@mui/icons-material/UnfoldMore';
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
@@ -34,7 +34,7 @@ function MenuRow({ icon, label, onClick, trailing, showChevron = true, labelColo
         border: 0,
         background: 'none',
         cursor: onClick ? 'pointer' : 'default',
-        py: 0.5,
+        py: '4px',
         px: 0,
         textAlign: 'left',
         font: 'inherit',
@@ -115,7 +115,7 @@ export function UserAccountMenu() {
               borderRadius: '8px',
               border: `1px solid ${theme.palette.borderSubtle1}`,
               boxShadow:
-                '0px 12px 16px -4px rgba(16, 24, 40, 0.1), 0px 4px 6px -2px rgba(16, 24, 40, 0.05)',
+                '0 1px 2px rgba(16, 24, 40, 0.04), 0 4px 12px rgba(16, 24, 40, 0.05)',
               overflow: 'hidden',
             },
           },
@@ -144,29 +144,25 @@ export function UserAccountMenu() {
           </Stack>
         </Box>
 
-        <Stack spacing={2.25} sx={{ px: '14px', py: 2 }}>
-          <Stack sx={{ gap: '4px' }}>
-            <MenuRow
-              icon={<CreditCardOutlinedIcon sx={{ fontSize: 20 }} />}
-              label="Card Management"
-              onClick={() => {
-                close();
-                navigate('/payment-methods');
-              }}
-            />
-            <Divider sx={{ borderColor: theme.palette.borderSubtle1 }} />
-            <MenuRow
-              icon={<PersonOutlinedIcon sx={{ fontSize: 20 }} />}
-              label="User Management"
-              onClick={() => {
-                close();
-                navigate('/users');
-              }}
-            />
-          </Stack>
-
+        <Stack sx={{ px: '14px', py: 2, gap: '10px' }}>
+          <MenuRow
+            icon={<AttachMoneyOutlinedIcon sx={{ fontSize: 20 }} />}
+            label="Payment Method"
+            onClick={() => {
+              close();
+              navigate('/payment-methods');
+            }}
+          />
           <Divider sx={{ borderColor: theme.palette.borderSubtle1 }} />
-
+          <MenuRow
+            icon={<SettingsOutlinedIcon sx={{ fontSize: 20 }} />}
+            label="Settings"
+            onClick={() => {
+              close();
+              navigate('/settings');
+            }}
+          />
+          <Divider sx={{ borderColor: theme.palette.borderSubtle1 }} />
           <MenuRow
             icon={<LogoutOutlinedIcon sx={{ fontSize: 20, color: '#B32318' }} />}
             label="Logout"

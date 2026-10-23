@@ -5,7 +5,7 @@ import Typography from '@mui/material/Typography';
 import { useTheme } from '@mui/material/styles';
 import AccountBalanceOutlinedIcon from '@mui/icons-material/AccountBalanceOutlined';
 import { PaymentMethodLogoIcon } from '../payment-method-logos';
-import { PaypalLogo } from '../payment-method-logos';
+import { ApplePayLogo, GooglePayLogo, PaypalLogo } from '../payment-method-logos';
 
 /**
  * The active payment method, drawn as the thing it actually is.
@@ -439,6 +439,24 @@ const WALLETS = {
     Logo: PaypalLogo,
     logoScale: 1.6,
     hero: (details) => details.email || 'PayPal',
+    footer: () => [{ label: 'Wallet', value: 'Connected', dot: true }],
+  },
+  'google-pay': {
+    type: 'GOOGLE PAY',
+    base: '#1A73E8',
+    bloom: 'rgba(52, 168, 83, 0.45)',
+    Logo: GooglePayLogo,
+    logoScale: 1.35,
+    hero: (details) => details.email || details.accountHolderName || 'Google Pay',
+    footer: () => [{ label: 'Wallet', value: 'Connected', dot: true }],
+  },
+  'apple-pay': {
+    type: 'APPLE PAY',
+    base: '#000000',
+    bloom: 'rgba(255, 255, 255, 0.18)',
+    Logo: ApplePayLogo,
+    logoScale: 1.35,
+    hero: (details) => details.email || details.accountHolderName || 'Apple Pay',
     footer: () => [{ label: 'Wallet', value: 'Connected', dot: true }],
   },
 };

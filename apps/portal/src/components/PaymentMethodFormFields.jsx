@@ -4,8 +4,8 @@ import Typography from '@mui/material/Typography';
 import { useId } from 'react';
 import { useTheme } from '@mui/material/styles';
 import { TextField } from './design-system';
-import { semantic } from '@signal/design-tokens/colors';
-import { cvvLengthFor, formatCardNumber, formatDigits } from '../data/paymentValidation';
+import { portalFieldInputSx, portalFieldLabelSx } from './portalFormFieldStyles';
+import { cvvLengthFor, formatCardExpiry, formatCardNumber, formatDigits } from '../data/paymentValidation';
 
 /**
  * A labelled field.
@@ -26,7 +26,7 @@ import { cvvLengthFor, formatCardNumber, formatDigits } from '../data/paymentVal
  * MM/YY pair reports one message for both boxes instead of two half-messages
  * that each describe the other's problem.
  */
-function PaymentField({ label, hint, error, children }) {
+function PaymentField({ label, hint, error, required = false, children }) {
   const theme = useTheme();
   const reactId = useId();
   const fieldId = `pf-${reactId}`;
@@ -37,19 +37,13 @@ function PaymentField({ label, hint, error, children }) {
 
   return (
     <Box sx={{ width: '100%', minWidth: 0, maxWidth: '100%' }}>
-      <Typography
-        component="label"
-        htmlFor={fieldId}
-        sx={{
-          display: 'block',
-          fontSize: 14,
-          fontWeight: 500,
-          lineHeight: '20px',
-          color: theme.palette.textPrimary,
-          mb: 0.5,
-        }}
-      >
+      <Typography component="label" htmlFor={fieldId} sx={portalFieldLabelSx(theme)}>
         {label}
+        {required ? (
+          <Box component="span" sx={{ color: theme.palette.textAlert, ml: 0.25 }} aria-hidden="true">
+            *
+          </Box>
+        ) : null}
       </Typography>
       {hint ? (
         <Typography id={hintId} sx={{ fontSize: 12, lineHeight: '16px', color: theme.palette.textSecondary2, mb: 1 }}>
@@ -69,30 +63,6 @@ function PaymentField({ label, hint, error, children }) {
   );
 }
 
-const fieldSx = {
-  width: '100%',
-  maxWidth: '100%',
-  minWidth: 0,
-  '& .MuiFormControl-root': {
-    width: '100%',
-    minWidth: 0,
-  },
-  '& .MuiOutlinedInput-root': {
-    minWidth: 0,
-    maxWidth: '100%',
-    borderRadius: '8px',
-    backgroundColor: semantic.surface.white,
-  },
-};
-
-const fieldPlaceholderSx = {
-  ...fieldSx,
-  '& .MuiOutlinedInput-input::placeholder': {
-    fontSize: 13,
-    opacity: 1,
-  },
-};
-
 const formStackSx = {
   width: '100%',
   minWidth: 0,
@@ -111,8 +81,19 @@ const formStackSx = {
 const twoColumnRowSx = {
   display: 'grid',
   gridTemplateColumns: { xs: '1fr', sm: 'minmax(0, 1fr) minmax(148px, 240px)' },
-  columnGap: 1,
-  rowGap: 2.5,
+  columnGap: 3,
+  rowGap: 3,
+  width: '100%',
+  minWidth: 0,
+  alignItems: 'start',
+  '& > *': { minWidth: 0 },
+};
+
+const twoEqualColumnRowSx = {
+  display: 'grid',
+  gridTemplateColumns: { xs: '1fr', sm: '1fr 1fr' },
+  columnGap: 3,
+  rowGap: 3,
   width: '100%',
   minWidth: 0,
   alignItems: 'start',
@@ -120,11 +101,19 @@ const twoColumnRowSx = {
 };
 
 export function PaymentMethodFormFields({ methodId, values = {}, errors = {}, onChange }) {
+  const theme = useTheme();
+  const fieldInputSx = portalFieldInputSx(theme);
   const set = (field) => (event) => onChange?.(field, event.target.value);
   /* Masked fields rewrite what was typed before it reaches state, so the value
      shown and the value validated are always the same string. */
   const setFormatted = (field, format) => (event) => onChange?.(field, format(event.target.value));
   const cvvLength = cvvLengthFor(values.cardNumber);
+  const setExpiry = (event) => {
+    const digits = formatDigits(event.target.value, 4);
+    onChange?.('expiryMonth', digits.slice(0, 2));
+    onChange?.('expiryYear', digits.slice(2, 4));
+  };
+  const expiryDisplay = formatCardExpiry(`${values.expiryMonth ?? ''}${values.expiryYear ?? ''}`);
 
   /**
    * Every text input in this form is the same shape; only its wiring differs.
@@ -137,30 +126,29 @@ export function PaymentMethodFormFields({ methodId, values = {}, errors = {}, on
     <TextField
       id={fieldId}
       fullWidth
-      size="small"
       error={Boolean(errors[props.errorKey ?? name])}
       value={values[name] ?? ''}
       onChange={props.onChange ?? set(name)}
       placeholder={props.placeholder}
       type={props.type}
       inputProps={{ ...props.inputProps, 'aria-describedby': describedBy }}
-      sx={fieldPlaceholderSx}
+      sx={fieldInputSx}
     />
   );
 
   switch (methodId) {
     case 'credit-card':
       return (
-        <Stack spacing={2.5} sx={formStackSx}>
+        <Stack spacing={3} sx={formStackSx}>
           <Box sx={twoColumnRowSx}>
-            <PaymentField label="Card number" error={errors.cardNumber}>
+            <PaymentField label="Card number" required error={errors.cardNumber}>
               {field('cardNumber', {
                 placeholder: 'Enter 16-digit card number',
                 inputProps: { inputMode: 'numeric', autoComplete: 'cc-number' },
                 onChange: setFormatted('cardNumber', formatCardNumber),
               })}
             </PaymentField>
-            <PaymentField label="CVV" error={errors.cvv}>
+            <PaymentField label="CVV" required error={errors.cvv}>
               {field('cvv', {
                 placeholder: 'Enter CVV',
                 inputProps: { inputMode: 'numeric', autoComplete: 'cc-csc' },
@@ -169,61 +157,32 @@ export function PaymentMethodFormFields({ methodId, values = {}, errors = {}, on
             </PaymentField>
           </Box>
 
-          <Box sx={twoColumnRowSx}>
-            <PaymentField label="Name on card" error={errors.nameOnCard}>
+          <Box sx={twoEqualColumnRowSx}>
+            <PaymentField label="Name on card" required error={errors.nameOnCard}>
               {field('nameOnCard', {
                 placeholder: 'Name as printed on the card',
                 inputProps: { autoComplete: 'cc-name' },
               })}
             </PaymentField>
 
-            {/* Two inputs under one visible label, so they keep explicit names of
-                their own and share the single expiry error between them. */}
-            <PaymentField label="Expiry date" error={errors.expiry}>
-              {({ describedBy }) => (
-                <Box
-                  sx={{
-                    display: 'grid',
-                    gridTemplateColumns: 'minmax(0, 1fr) minmax(0, 1fr)',
-                    columnGap: 1,
-                    width: '100%',
-                    minWidth: 0,
-                    maxWidth: '100%',
+            <PaymentField label="Expiry date" required error={errors.expiry}>
+              {({ fieldId, describedBy }) => (
+                <TextField
+                  id={fieldId}
+                  fullWidth
+                  placeholder="MM/YY"
+                  error={Boolean(errors.expiry)}
+                  value={expiryDisplay}
+                  onChange={setExpiry}
+                  inputProps={{
+                    maxLength: 5,
+                    inputMode: 'numeric',
+                    autoComplete: 'cc-exp',
+                    'aria-label': 'Expiry date',
+                    'aria-describedby': describedBy,
                   }}
-                >
-                  <TextField
-                    fullWidth
-                    size="small"
-                    placeholder="MM"
-                    error={Boolean(errors.expiry)}
-                    inputProps={{
-                      maxLength: 2,
-                      inputMode: 'numeric',
-                      autoComplete: 'cc-exp-month',
-                      'aria-label': 'Expiry month',
-                      'aria-describedby': describedBy,
-                    }}
-                    value={values.expiryMonth ?? ''}
-                    onChange={setFormatted('expiryMonth', (value) => formatDigits(value, 2))}
-                    sx={{ ...fieldPlaceholderSx, minWidth: 0 }}
-                  />
-                  <TextField
-                    fullWidth
-                    size="small"
-                    placeholder="YY"
-                    error={Boolean(errors.expiry)}
-                    inputProps={{
-                      maxLength: 2,
-                      inputMode: 'numeric',
-                      autoComplete: 'cc-exp-year',
-                      'aria-label': 'Expiry year',
-                      'aria-describedby': describedBy,
-                    }}
-                    value={values.expiryYear ?? ''}
-                    onChange={setFormatted('expiryYear', (value) => formatDigits(value, 2))}
-                    sx={{ ...fieldPlaceholderSx, minWidth: 0 }}
-                  />
-                </Box>
+                  sx={fieldInputSx}
+                />
               )}
             </PaymentField>
           </Box>
@@ -232,16 +191,16 @@ export function PaymentMethodFormFields({ methodId, values = {}, errors = {}, on
 
     case 'ach':
       return (
-        <Stack spacing={2.5} sx={formStackSx}>
-          <Box sx={twoColumnRowSx}>
-            <PaymentField label="Account number" error={errors.accountNumber}>
+        <Stack spacing={3} sx={formStackSx}>
+          <Box sx={twoEqualColumnRowSx}>
+            <PaymentField label="Account number" required error={errors.accountNumber}>
               {field('accountNumber', {
                 placeholder: 'Enter account number',
                 inputProps: { maxLength: 17, inputMode: 'numeric' },
                 onChange: setFormatted('accountNumber', (value) => formatDigits(value, 17)),
               })}
             </PaymentField>
-            <PaymentField label="Routing number" error={errors.routingNumber}>
+            <PaymentField label="Routing number" required error={errors.routingNumber}>
               {field('routingNumber', {
                 placeholder: '9 digits',
                 inputProps: { maxLength: 9, inputMode: 'numeric' },
@@ -252,9 +211,37 @@ export function PaymentMethodFormFields({ methodId, values = {}, errors = {}, on
 
           {/* Alone on its row rather than paired with an empty cell: a name field
               has no reason to stop at half width just to keep a grid square. */}
-          <Box sx={{ ...twoColumnRowSx, gridTemplateColumns: '1fr' }}>
-            <PaymentField label="Account holder name" error={errors.accountHolderName}>
+          <Box sx={{ ...twoEqualColumnRowSx, gridTemplateColumns: '1fr' }}>
+            <PaymentField label="Account holder name" required error={errors.accountHolderName}>
               {field('accountHolderName', { placeholder: 'Name on the account' })}
+            </PaymentField>
+          </Box>
+        </Stack>
+      );
+
+    case 'google-pay':
+      return (
+        <Stack spacing={3} sx={formStackSx}>
+          <Box sx={twoEqualColumnRowSx}>
+            <PaymentField label="Google account email" required error={errors.email}>
+              {field('email', { type: 'email', placeholder: 'Enter Google account email' })}
+            </PaymentField>
+            <PaymentField label="Account holder name" required error={errors.accountHolderName}>
+              {field('accountHolderName', { placeholder: 'Name on the wallet' })}
+            </PaymentField>
+          </Box>
+        </Stack>
+      );
+
+    case 'apple-pay':
+      return (
+        <Stack spacing={3} sx={formStackSx}>
+          <Box sx={twoEqualColumnRowSx}>
+            <PaymentField label="Apple ID email" required error={errors.email}>
+              {field('email', { type: 'email', placeholder: 'Enter Apple ID email' })}
+            </PaymentField>
+            <PaymentField label="Billing name" required error={errors.accountHolderName}>
+              {field('accountHolderName', { placeholder: 'Name on the wallet' })}
             </PaymentField>
           </Box>
         </Stack>
@@ -271,13 +258,9 @@ export function PaymentMethodFormFields({ methodId, values = {}, errors = {}, on
        * `buildDetailsFromForm` reads only the email.
        */
       return (
-        <Stack spacing={2.5} sx={formStackSx}>
-          <Box sx={twoColumnRowSx}>
-            <PaymentField
-              label="PayPal email"
-              hint="We'll open PayPal to confirm. You sign in there, never here."
-              error={errors.email}
-            >
+        <Stack spacing={3} sx={formStackSx}>
+          <Box sx={twoEqualColumnRowSx}>
+            <PaymentField label="PayPal email" required error={errors.email}>
               {field('email', { type: 'email', placeholder: 'Enter PayPal email' })}
             </PaymentField>
           </Box>

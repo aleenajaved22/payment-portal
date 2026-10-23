@@ -24,6 +24,8 @@ function isSameMethod(typeId, a = {}, b = {}) {
     case 'ach':
       return eq(a.accountLast4, b.accountLast4) && eq(a.routingNumber, b.routingNumber);
     case 'paypal':
+    case 'google-pay':
+    case 'apple-pay':
       return eq(a.email, b.email);
     default:
       return false;

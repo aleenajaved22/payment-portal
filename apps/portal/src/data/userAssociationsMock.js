@@ -11,10 +11,15 @@ function seedFrom(id) {
 /** Demo franchise + site tags for the user detail drawer (deterministic per user id). */
 export function getUserAssociations(user) {
   if (user?.franchises?.length || user?.sites?.length) {
-    return {
-      franchises: user.franchises ?? [],
-      sites: user.sites ?? [],
-    };
+    const franchises = user.franchises ?? [];
+    let sites = user.sites ?? [];
+    if (franchises.length && sites.length === 0) {
+      const pool = getSitesForFranchises(franchises);
+      const seed = seedFrom(user?.id ?? '0');
+      const siteCount = Math.min(pool.length, 2 + (seed % 4));
+      sites = pool.slice(0, siteCount);
+    }
+    return { franchises, sites };
   }
 
   const seed = seedFrom(user?.id ?? '0');

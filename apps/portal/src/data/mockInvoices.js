@@ -1,11 +1,21 @@
 import { semantic } from '@signal/design-tokens/colors';
+import {
+  INVOICE_OVERDUE_HALO,
+  INVOICE_OVERDUE_ORANGE,
+  INVOICE_PAID_DOT,
+  INVOICE_PAID_HALO,
+  INVOICE_PAYMENT_FAILED_HALO,
+  INVOICE_PAYMENT_FAILED_RED,
+  INVOICE_PENDING_DOT,
+  INVOICE_PENDING_HALO,
+} from './invoiceStatusColors';
 
-/** Saturated status fills from the DS strong-surface ramp (bar fills). */
+/** Bar fills — match status dot colors. */
 const SEGMENT_BAR_FILL = {
-  paid: semantic.surface.successStrong,
-  pending: semantic.surface.warningStrong,
-  overdue: semantic.surface.alertStrong,
-  paymentFailed: semantic.border.formError,
+  paid: INVOICE_PAID_DOT,
+  pending: INVOICE_PENDING_DOT,
+  overdue: INVOICE_OVERDUE_ORANGE,
+  paymentFailed: INVOICE_PAYMENT_FAILED_RED,
 };
 const DASHBOARD_STAT_THEME = {
   total: {
@@ -13,16 +23,16 @@ const DASHBOARD_STAT_THEME = {
     iconBg: semantic.surface.greySubtle,
   },
   paid: {
-    color: semantic.status.onSubtle.success,
-    iconBg: semantic.surface.successSubtle,
+    color: INVOICE_PAID_DOT,
+    iconBg: INVOICE_PAID_HALO,
   },
   pending: {
-    color: semantic.status.onSubtle.warning,
-    iconBg: semantic.surface.warningSubtle,
+    color: INVOICE_PENDING_DOT,
+    iconBg: INVOICE_PENDING_HALO,
   },
   overdue: {
-    color: semantic.text.alert,
-    iconBg: semantic.surface.alertSubtle,
+    color: INVOICE_OVERDUE_ORANGE,
+    iconBg: INVOICE_OVERDUE_HALO,
   },
 };
 
@@ -110,7 +120,7 @@ const mockInvoiceRows = [
     amount: '$4,250.00',
     status: 'Pending',
     contract: 'Contract Q1-2024',
-    dueDate: dueIn(6),
+    dueDate: dueIn(0),
     invoiceDate: issuedAgo(24),
     paymentTerms: 'NET 10',
     filterCount: 29,
@@ -122,7 +132,7 @@ const mockInvoiceRows = [
     amount: '$2,180.00',
     status: 'Paid',
     contract: 'Contract Q2-2024',
-    dueDate: dueIn(-40),
+    dueDate: dueIn(-1),
     invoiceDate: issuedAgo(70),
     paymentTerms: 'NET 10',
     filterCount: 15,
@@ -134,7 +144,7 @@ const mockInvoiceRows = [
     amount: '$3,420.00',
     status: 'Overdue',
     contract: 'Contract Q1-2024',
-    dueDate: dueIn(-34),
+    dueDate: dueIn(-9),
     invoiceDate: issuedAgo(64),
     paymentTerms: 'NET 10',
     filterCount: 24,
@@ -146,7 +156,7 @@ const mockInvoiceRows = [
     amount: '$1,890.00',
     status: 'Paid',
     contract: 'Contract Q2-2024',
-    dueDate: dueIn(-61),
+    dueDate: dueIn(-2),
     invoiceDate: issuedAgo(91),
     paymentTerms: 'NET 10',
     filterCount: 13,
@@ -158,7 +168,7 @@ const mockInvoiceRows = [
     amount: '$5,100.00',
     status: 'Pending',
     contract: 'Contract Q2-2024',
-    dueDate: dueIn(13),
+    dueDate: dueIn(2),
     invoiceDate: issuedAgo(17),
     paymentTerms: 'NET 10',
     filterCount: 35,
@@ -170,7 +180,7 @@ const mockInvoiceRows = [
     amount: '$2,650.00',
     status: 'Paid',
     contract: 'Contract Q1-2024',
-    dueDate: dueIn(-75),
+    dueDate: dueIn(2),
     invoiceDate: issuedAgo(105),
     paymentTerms: 'NET 10',
     filterCount: 18,
@@ -182,7 +192,7 @@ const mockInvoiceRows = [
     amount: '$980.00',
     status: 'Overdue',
     contract: 'Contract Q1-2024',
-    dueDate: dueIn(-52),
+    dueDate: dueIn(-7),
     invoiceDate: issuedAgo(82),
     paymentTerms: 'NET 10',
     filterCount: 7,
@@ -194,7 +204,7 @@ const mockInvoiceRows = [
     amount: '$3,775.00',
     status: 'Pending',
     contract: 'Contract Q1-2024',
-    dueDate: dueIn(21),
+    dueDate: dueIn(4),
     invoiceDate: issuedAgo(9),
     paymentTerms: 'NET 10',
     filterCount: 26,
@@ -206,7 +216,7 @@ const mockInvoiceRows = [
     amount: '$1,860.00',
     status: 'Overdue',
     contract: 'Contract Q1-2024',
-    dueDate: dueIn(-21),
+    dueDate: dueIn(-10),
     invoiceDate: issuedAgo(51),
     paymentTerms: 'NET 10',
     filterCount: 13,
@@ -218,7 +228,7 @@ const mockInvoiceRows = [
     amount: '$2,340.00',
     status: 'Overdue',
     contract: 'Contract Q2-2024',
-    dueDate: dueIn(-12),
+    dueDate: dueIn(1),
     invoiceDate: issuedAgo(42),
     paymentTerms: 'NET 10',
     filterCount: 16,
@@ -230,7 +240,7 @@ const mockInvoiceRows = [
     amount: '$2,910.00',
     status: 'Pending',
     contract: 'Contract Q2-2024',
-    dueDate: dueIn(9),
+    dueDate: dueIn(-14),
     invoiceDate: issuedAgo(21),
     paymentTerms: 'NET 10',
     filterCount: 20,
@@ -242,10 +252,12 @@ const mockInvoiceRows = [
     amount: '$1,450.00',
     status: 'Payment Failed',
     contract: 'Contract Q1-2024',
-    dueDate: dueIn(17),
+    dueDate: dueIn(4),
     invoiceDate: issuedAgo(13),
     paymentTerms: 'NET 10',
     filterCount: 10,
+    paymentFailureReason:
+      'Your bank declined this charge. Verify your account details or try another payment method.',
   },
   {
     id: '13',
@@ -254,7 +266,7 @@ const mockInvoiceRows = [
     amount: '$3,260.00',
     status: 'Pending',
     contract: 'Contract Q2-2024',
-    dueDate: dueIn(28),
+    dueDate: dueIn(3),
     invoiceDate: issuedAgo(2),
     paymentTerms: 'NET 10',
     filterCount: 22,
@@ -279,10 +291,22 @@ export function getUniqueInvoiceSites(invoices = mockInvoices) {
 }
 
 export const invoiceSiteFilterOptions = ['All sites', ...getUniqueInvoiceSites()];
-export const invoiceStatusFilterOptions = ['All statuses', 'Paid', 'Pending', 'Overdue', 'Payment Failed'];
+export const ALL_STATUS_FILTER = 'All Status';
+
+export const invoiceStatusFilterOptions = [
+  ALL_STATUS_FILTER,
+  'Paid',
+  'Pending',
+  'Overdue',
+  'Payment Failed',
+];
+
+export function isAllStatusesFilter(status) {
+  return !status || status === ALL_STATUS_FILTER || status === 'All statuses';
+}
 
 export function filterInvoicesByStatus(invoices, status) {
-  if (!status) return invoices;
+  if (isAllStatusesFilter(status)) return invoices;
   return invoices.filter((invoice) => invoice.status === status);
 }
 
@@ -449,32 +473,34 @@ export function getInvoiceDashboardCards(invoices = mockInvoices) {
 }
 
 export function getInvoiceStatusSegmentStats(invoices = mockInvoices) {
-  // Ordered by urgency: Overdue leads the legend. Paid is computed here for the
-  // totals but filtered out below — the legend shows only what still needs action.
   const segments = [
+    {
+      id: 'paid',
+      label: 'Paid',
+      barColor: SEGMENT_BAR_FILL.paid,
+      dotColor: INVOICE_PAID_DOT,
+      haloColor: INVOICE_PAID_HALO,
+    },
     {
       id: 'overdue',
       label: 'Overdue',
       barColor: SEGMENT_BAR_FILL.overdue,
-      dotColor: SEGMENT_BAR_FILL.overdue,
-    },
-    {
-      id: 'payment-failed',
-      label: 'Payment Failed',
-      barColor: SEGMENT_BAR_FILL.paymentFailed,
-      dotColor: SEGMENT_BAR_FILL.paymentFailed,
+      dotColor: INVOICE_OVERDUE_ORANGE,
+      haloColor: INVOICE_OVERDUE_HALO,
     },
     {
       id: 'pending',
       label: 'Pending',
       barColor: SEGMENT_BAR_FILL.pending,
-      dotColor: SEGMENT_BAR_FILL.pending,
+      dotColor: INVOICE_PENDING_DOT,
+      haloColor: INVOICE_PENDING_HALO,
     },
     {
-      id: 'paid',
-      label: 'Paid',
-      barColor: SEGMENT_BAR_FILL.paid,
-      dotColor: SEGMENT_BAR_FILL.paid,
+      id: 'payment-failed',
+      label: 'Payment Failed',
+      barColor: SEGMENT_BAR_FILL.paymentFailed,
+      dotColor: INVOICE_PAYMENT_FAILED_RED,
+      haloColor: INVOICE_PAYMENT_FAILED_HALO,
     },
   ].map((segment) => {
     const matching = filterInvoicesByStatus(invoices, segment.label);
@@ -497,17 +523,11 @@ export function getInvoiceStatusSegmentStats(invoices = mockInvoices) {
     .filter((segment) => segment.label !== 'Paid')
     .reduce((sum, segment) => sum + segment.count, 0);
 
-  /**
-   * The legend only carries what the customer can act on — Paid is settled, so it
-   * drops out of the list while still counting toward the total shown beside it.
-   */
-  const actionableSegments = segments.filter((segment) => segment.label !== 'Paid');
-
   return {
     totalLabel: formatInvoiceTotal(totalValue),
     outstandingLabel: formatInvoiceTotal(outstandingValue),
     outstandingCount,
-    segments: actionableSegments.map((segment) => ({
+    segments: segments.map((segment) => ({
       ...segment,
       percent: totalValue === 0 ? 0 : Math.round((segment.value / safeTotal) * 100),
     })),

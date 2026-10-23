@@ -17,14 +17,22 @@ import { useInvoices } from '../context/InvoicesContext';
 import { usePaymentMethods } from '../context/PaymentMethodsContext';
 import { PaymentConfirmationToast } from '../components/PaymentConfirmationToast';
 import {
+  ALL_STATUS_FILTER,
   formatInvoiceTotal,
   getInvoiceDashboardCards,
   getInvoiceStatusSegmentStats,
   getPendingInvoices,
+  isAllStatusesFilter,
   parseInvoiceAmount,
   parseInvoiceDate,
   sumInvoiceAmounts,
 } from '../data/mockInvoices';
+import {
+  formatDateRange,
+  getInvoicesSpan,
+  getReportDateRange,
+  isInvoiceDueInRange,
+} from '../data/reportFilters';
 
 const ROWS_PER_PAGE = 8;
 const STATS_LAYOUT_STORAGE_KEY = 'filtergo_portal_invoice_stats_layout';
@@ -33,7 +41,8 @@ export function InvoicePaymentPage() {
   const theme = useTheme();
   const [query, setQuery] = useState('');
   const [site, setSite] = useState('');
-  const [status, setStatus] = useState('');
+  const [status, setStatus] = useState(ALL_STATUS_FILTER);
+  const [week, setWeek] = useState('This Week');
   const [page, setPage] = useState(0);
   const [sortField, setSortField] = useState('dueDate');
   const [sortDirection, setSortDirection] = useState('desc');
@@ -92,9 +101,11 @@ export function InvoicePaymentPage() {
     beginPayment([invoice]);
   };
 
+  const dateRange = useMemo(() => getReportDateRange(week), [week]);
+
   useEffect(() => {
     setPage(0);
-  }, [query, site, status]);
+  }, [query, site, status, week]);
 
   const filteredInvoices = useMemo(() => {
     let rows = [...allInvoices];
@@ -117,8 +128,12 @@ export function InvoicePaymentPage() {
       rows = rows.filter((invoice) => invoice.site === site);
     }
 
-    if (status) {
+    if (!isAllStatusesFilter(status)) {
       rows = rows.filter((invoice) => invoice.status === status);
+    }
+
+    if (dateRange) {
+      rows = rows.filter((invoice) => isInvoiceDueInRange(invoice, dateRange));
     }
 
     rows.sort((a, b) => {
@@ -144,7 +159,9 @@ export function InvoicePaymentPage() {
     });
 
     return rows;
-  }, [allInvoices, query, site, status, sortField, sortDirection]);
+  }, [allInvoices, query, site, status, dateRange, sortField, sortDirection]);
+
+  const dateRangeLabel = formatDateRange(dateRange ?? getInvoicesSpan(allInvoices));
 
   const pagedInvoices = filteredInvoices.slice(page * ROWS_PER_PAGE, page * ROWS_PER_PAGE + ROWS_PER_PAGE);
   const total = filteredInvoices.length;
@@ -187,8 +204,8 @@ export function InvoicePaymentPage() {
           ) : (
             <InvoiceStatsSegmentRow
               segments={statusSegmentStats.segments}
-              activeStatus={status}
-              onSelectStatus={setStatus}
+              activeStatus={isAllStatusesFilter(status) ? '' : status}
+              onSelectStatus={(label) => setStatus(label || ALL_STATUS_FILTER)}
             />
           )}
         </Box>
@@ -201,6 +218,10 @@ export function InvoicePaymentPage() {
             onSiteChange={setSite}
             status={status}
             onStatusChange={setStatus}
+            week={week}
+            onWeekChange={setWeek}
+            dateRangeLabel={dateRangeLabel}
+            dateRange={dateRange ?? getInvoicesSpan(allInvoices)}
             showPayNow={selectedIds.length > 0}
             onPayNow={openPaymentModalFromToolbar}
           />
@@ -209,6 +230,7 @@ export function InvoicePaymentPage() {
         <Box
           sx={{
             width: '100%',
+            px: '32px',
             pt: 0.5,
             maxHeight: isBoardLayout ? 'none' : 'calc(100vh - 280px)',
             overflowY: isBoardLayout ? 'visible' : 'auto',
@@ -248,7 +270,7 @@ export function InvoicePaymentPage() {
                     alignItems="center"
                     justifyContent="flex-end"
                     spacing={1.25}
-                    sx={{ pt: 2, px: '32px', boxSizing: 'border-box' }}
+                    sx={{ pt: 2, boxSizing: 'border-box' }}
                   >
                     <Typography variant="body2" sx={{ color: theme.palette.textSecondary2, fontSize: 14 }}>
                       {from}-{to} of {total}

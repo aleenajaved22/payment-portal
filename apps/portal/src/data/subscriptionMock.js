@@ -1,3 +1,5 @@
+import { invoiceCompanyBySite } from './mockInvoices';
+
 /**
  * Subscription / contract model, shaped from the contract billing screen.
  *
@@ -18,6 +20,17 @@ const SCHEDULE_ISO = ['2026-04-01', '2026-07-01', '2026-10-01', '2027-01-01'];
 
 const CONTRACT_START = '2024-12-24';
 const CONTRACT_END = '2026-12-30';
+
+const CONTRACT_ID_BY_SITE = {
+  'KFC Owen Tech': 'FG-45657',
+  'KFC Lakeview': 'FG-45658',
+  'KFC Fremont': 'FG-45659',
+};
+
+function formatMonthYear(date) {
+  if (!(date instanceof Date) || Number.isNaN(date.getTime())) return '—';
+  return date.toLocaleDateString('en-US', { month: 'short', year: 'numeric' });
+}
 
 function atMidnight(iso) {
   return new Date(`${iso}T00:00:00`);
@@ -82,4 +95,21 @@ function buildPerService(now) {
 export function getSubscription(site, now = new Date()) {
   if (site === 'KFC Fremont') return buildPerService(now);
   return buildRecurring(now);
+}
+
+/** Header strip above the plan card when a site is in scope. */
+export function getContractSummary(site, subscription, now = new Date()) {
+  if (!site || !subscription) return null;
+  const sub = subscription ?? getSubscription(site, now);
+  const nextServiceDate =
+    sub.planType === 'recurring' && sub.nextCharge?.date
+      ? sub.nextCharge.date
+      : sub.contractEnd;
+
+  return {
+    contractId: CONTRACT_ID_BY_SITE[site] ?? 'FG-45657',
+    companyName: invoiceCompanyBySite[site] ?? '—',
+    site,
+    nextService: formatMonthYear(nextServiceDate),
+  };
 }

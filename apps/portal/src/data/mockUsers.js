@@ -58,6 +58,8 @@ export const mockUsers = [
     status: 'active',
     addedAt: daysAgoIso(120),
     lastActiveAt: daysAgoIso(0),
+    franchises: ['#884 - Omaha, NE', '#1012 - Wichita, KS', '#342 - Manchester, NH'],
+    sites: ['KFC Owen Tech', 'KFC Fremont', 'Milwaukee tools', 'Cosmic Munchies'],
   },
   {
     id: 'u-2',

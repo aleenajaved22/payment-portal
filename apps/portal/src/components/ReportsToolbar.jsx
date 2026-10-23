@@ -1,15 +1,19 @@
 import InputAdornment from '@mui/material/InputAdornment';
 import Stack from '@mui/material/Stack';
 import { useTheme } from '@mui/material/styles';
-import CalendarTodayOutlinedIcon from '@mui/icons-material/CalendarTodayOutlined';
+import FileDownloadOutlinedIcon from '@mui/icons-material/FileDownloadOutlined';
 import SearchRoundedIcon from '@mui/icons-material/SearchRounded';
 import { FilterSelect } from './FilterSelect';
-import { Search, TextField } from './design-system';
+import { ToolbarDateRangeField } from './ToolbarDateRangeField';
+import { Button, Search } from './design-system';
+import { toolbarSearchFieldSx, toolbarSearchIconSx } from './toolbarSearchFieldSx';
 import {
   reportTypeFilterOptions,
   siteFilterOptions,
   weekFilterOptions,
 } from '../data/mockReports';
+
+const SEARCH_PLACEHOLDER = 'Search';
 
 export function ReportsToolbar({
   query,
@@ -21,6 +25,9 @@ export function ReportsToolbar({
   week,
   onWeekChange,
   dateRangeLabel,
+  dateRange,
+  selectedCount = 0,
+  onBulkDownload,
 }) {
   const theme = useTheme();
 
@@ -31,51 +38,37 @@ export function ReportsToolbar({
       alignItems={{ xs: 'stretch', lg: 'center' }}
       justifyContent="space-between"
     >
-      <Stack direction={{ xs: 'column', md: 'row' }} spacing={{ xs: 2, md: 1 }} alignItems={{ xs: 'stretch', md: 'center' }}>
+      <Stack
+        direction={{ xs: 'column', md: 'row' }}
+        spacing={{ xs: 2, md: 1.5 }}
+        alignItems={{ xs: 'stretch', md: 'center' }}
+        sx={{ minWidth: 0, flexWrap: { md: 'nowrap' } }}
+      >
         <Search
-          placeholder="Search reports"
+          placeholder={SEARCH_PLACEHOLDER}
           variant="outlined"
           size="small"
           value={query}
           onChange={(e) => onQueryChange(e.target.value)}
-          sx={{
-            // The theme forces minWidth:220 on text fields; anything narrower
-            // overflows its wrapper and collides with the filter beside it.
-            width: { xs: '100%', md: 240 },
-            '& .MuiOutlinedInput-root': {
-              borderRadius: '20px',
-              backgroundColor: theme.palette.surfaceWhite,
-              height: 36,
-            },
-            '& .MuiOutlinedInput-input': {
-              fontSize: 14,
-              fontWeight: 500,
-            },
-            // Theme ships the placeholder at 16px/400 #cccccc — 1.61:1 on white,
-            // below WCAG AA. Matches the invoices toolbar: filter type scale,
-            // grey.500 for 5.37:1. Needs the more specific selector to win.
-            '& .MuiOutlinedInput-root .MuiInputBase-input::placeholder': {
-              fontSize: 14,
-              fontWeight: 500,
-              lineHeight: '20px',
-              color: '#6a6a70',
-              opacity: 1,
-            },
-            '& .MuiOutlinedInput-notchedOutline': {
-              borderColor: theme.palette.borderSubtle2,
-            },
-          }}
+          sx={toolbarSearchFieldSx(theme, { placeholder: SEARCH_PLACEHOLDER, query, extraWidthPx: 80 })}
           InputProps={{
             startAdornment: (
               <InputAdornment position="start">
-                <SearchRoundedIcon sx={{ fontSize: 18, color: theme.palette.textSecondary2 }} />
+                <SearchRoundedIcon sx={toolbarSearchIconSx(theme)} />
               </InputAdornment>
             ),
           }}
         />
 
-        <Stack direction="row" spacing={0.5} flexWrap="wrap" alignItems="center">
-          <FilterSelect label="Sites" value={site} onChange={onSiteChange} options={siteFilterOptions} />
+        <Stack direction="row" spacing={0.5} flexWrap="wrap" alignItems="center" sx={{ flexShrink: 0 }}>
+          <FilterSelect
+            label="Sites"
+            value={site}
+            onChange={onSiteChange}
+            options={siteFilterOptions}
+            searchable
+            searchPlaceholder="Search sites"
+          />
           <FilterSelect
             label="Report Type"
             value={reportType}
@@ -94,37 +87,25 @@ export function ReportsToolbar({
         </Stack>
       </Stack>
 
-      {/* Reads out the window actually in force — the select above sets it, and
-          with nothing selected it states the span of the reports on screen. */}
-      <TextField
-        variant="outlined"
-        size="small"
-        value={dateRangeLabel ?? ''}
-        inputProps={{ 'aria-label': 'Date range in view' }}
-        InputProps={{
-          readOnly: true,
-          endAdornment: (
-            <InputAdornment position="end">
-              <CalendarTodayOutlinedIcon sx={{ fontSize: 18, color: theme.palette.textSecondary3 }} />
-            </InputAdornment>
-          ),
-        }}
-        sx={{
-          width: { xs: '100%', lg: 260 },
-          '& .MuiOutlinedInput-root': {
-            borderRadius: '8px',
-            backgroundColor: theme.palette.surfaceWhite,
-            height: 36,
-          },
-          '& .MuiOutlinedInput-notchedOutline': {
-            borderColor: theme.palette.borderSubtle2,
-          },
-          '& .MuiOutlinedInput-input': {
-            fontSize: 14,
-            color: theme.palette.textPrimary,
-          },
-        }}
-      />
+      <Stack direction="row" alignItems="center" spacing={1} sx={{ flexShrink: 0 }}>
+        <Button
+          variant="primary"
+          onClick={onBulkDownload}
+          disabled={selectedCount === 0}
+          startIcon={<FileDownloadOutlinedIcon sx={{ fontSize: 18 }} />}
+          sx={{ flexShrink: 0, whiteSpace: 'nowrap' }}
+        >
+          Download ({selectedCount})
+        </Button>
+
+        <ToolbarDateRangeField
+          displayValue={dateRangeLabel}
+          presetOptions={weekFilterOptions}
+          activePreset={week}
+          onPresetChange={onWeekChange}
+          range={dateRange}
+        />
+      </Stack>
     </Stack>
   );
 }

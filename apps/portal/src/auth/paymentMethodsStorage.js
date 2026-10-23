@@ -1,13 +1,14 @@
-import { getDefaultPaymentMethodsState } from '../data/defaultPaymentMethods';
+import { getDefaultPaymentMethodsState, mergeMissingSeedPaymentMethods } from '../data/defaultPaymentMethods';
 
 const STORAGE_KEY = 'filtergo_portal_payment_methods_v2';
 
-const REMOVED_PAYMENT_TYPE_IDS = new Set(['zelle', 'venmo']);
+const REMOVED_PAYMENT_TYPE_IDS = new Set(['zelle', 'venmo', 'paypal']);
 
 function normalizeStoredState(parsed) {
-  const methods = (Array.isArray(parsed.methods) ? parsed.methods : []).filter(
+  let methods = (Array.isArray(parsed.methods) ? parsed.methods : []).filter(
     (method) => !REMOVED_PAYMENT_TYPE_IDS.has(method.typeId),
   );
+  methods = mergeMissingSeedPaymentMethods(methods);
   let defaultMethodId = parsed.defaultMethodId ?? methods[0]?.id ?? null;
   if (defaultMethodId && !methods.some((method) => method.id === defaultMethodId)) {
     defaultMethodId = methods[0]?.id ?? null;

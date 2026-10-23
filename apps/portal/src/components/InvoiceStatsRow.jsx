@@ -145,8 +145,8 @@ export function InvoiceStatsRow({ cards, stackedLayout = false }) {
   );
 }
 
-function SegmentHaloIcon({ color }) {
-  const haloSize = 35;
+function SegmentHaloIcon({ color, haloColor }) {
+  const haloSize = 24;
   const dotSize = 10;
 
   return (
@@ -162,7 +162,7 @@ function SegmentHaloIcon({ color }) {
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
-        backgroundColor: alpha(color, 0.16),
+        backgroundColor: haloColor ?? alpha(color, 0.16),
       }}
     >
       <Box
@@ -193,16 +193,15 @@ function SegmentStatCell({ segment, isActive, onSelect, showDivider }) {
       aria-pressed={interactive ? isActive : undefined}
       aria-label={interactive ? `Filter by ${segment.label}: ${segment.amountLabel}, ${countLabel}` : undefined}
       sx={{
-        width: 'max-content',
-        maxWidth: '100%',
-        flexShrink: 0,
+        flex: 1,
+        minWidth: 0,
         boxSizing: 'border-box',
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'flex-start',
         font: 'inherit',
         px: '32px',
-        py: '24px',
+        py: '20px',
         border: 'none',
         backgroundColor: isActive ? theme.palette.surfaceGreySubtle : theme.palette.surfaceWhite,
         borderRight: showDivider ? `1px solid ${theme.palette.borderSubtle1}` : 'none',
@@ -213,9 +212,15 @@ function SegmentStatCell({ segment, isActive, onSelect, showDivider }) {
           : undefined,
       }}
     >
-      <Stack direction="row" spacing={1.5} alignItems="center" justifyContent="flex-start" sx={{ minWidth: 0, maxWidth: '100%' }}>
-        <SegmentHaloIcon color={segment.dotColor} />
-        <Stack alignItems="flex-start" sx={{ minWidth: 0, textAlign: 'left' }}>
+      <Stack
+        direction="row"
+        spacing={1.5}
+        alignItems="center"
+        justifyContent="flex-start"
+        sx={{ minWidth: 0, maxWidth: '100%', minHeight: 41 }}
+      >
+        <SegmentHaloIcon color={segment.dotColor} haloColor={segment.haloColor} />
+        <Stack alignItems="flex-start" spacing={0.5} sx={{ minWidth: 0, textAlign: 'left' }}>
           <Typography
             sx={{
               fontSize: 14,
@@ -228,23 +233,34 @@ function SegmentStatCell({ segment, isActive, onSelect, showDivider }) {
           </Typography>
           <Stack
             direction="row"
-            alignItems="baseline"
+            alignItems="center"
             justifyContent="flex-start"
-            spacing={1.25}
-            sx={{ mt: 0.75, flexWrap: 'wrap' }}
+            spacing={0.75}
+            sx={{ flexWrap: 'wrap' }}
           >
             <Typography
               sx={{
-                fontSize: 22,
+                fontSize: 14,
                 fontWeight: 700,
-                lineHeight: '30px',
-                letterSpacing: '-0.01em',
+                lineHeight: 'normal',
                 fontVariantNumeric: 'tabular-nums',
                 color: theme.palette.textPrimary,
+                whiteSpace: 'nowrap',
               }}
             >
               {segment.amountLabel}
             </Typography>
+            <Box
+              component="span"
+              aria-hidden
+              sx={{
+                width: 3,
+                height: 3,
+                borderRadius: '50%',
+                flexShrink: 0,
+                backgroundColor: theme.palette.textSecondary3,
+              }}
+            />
             <Typography
               sx={{
                 fontSize: 13,

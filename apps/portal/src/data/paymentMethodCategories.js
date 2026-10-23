@@ -1,7 +1,8 @@
 export const PAYMENT_METHOD_CATEGORIES = [
   { title: 'Credit card', typeId: 'credit-card' },
   { title: 'ACH', typeId: 'ach' },
-  { title: 'PayPal', typeId: 'paypal' },
+  { title: 'Google Pay', typeId: 'google-pay' },
+  { title: 'Apple Pay', typeId: 'apple-pay' },
 ];
 
 export const EMPTY_PAYMENT_METHOD_FORMS = {
@@ -19,6 +20,14 @@ export const EMPTY_PAYMENT_METHOD_FORMS = {
   },
   paypal: {
     email: '',
+  },
+  'google-pay': {
+    email: '',
+    accountHolderName: '',
+  },
+  'apple-pay': {
+    email: '',
+    accountHolderName: '',
   },
 };
 
@@ -83,6 +92,12 @@ export function buildDetailsFromForm(typeId, form = {}) {
       return {
         email: String(form.email ?? '').trim(),
       };
+    case 'google-pay':
+    case 'apple-pay':
+      return {
+        email: String(form.email ?? '').trim(),
+        accountHolderName: String(form.accountHolderName ?? '').trim(),
+      };
     default:
       return {};
   }
@@ -109,6 +124,16 @@ export function buildPaymentMethodSummary(typeId, details = {}) {
       return {
         label: details.email || 'PayPal',
         subtitle: '',
+      };
+    case 'google-pay':
+      return {
+        label: details.accountHolderName || details.email || 'Google Pay',
+        subtitle: details.email && details.accountHolderName ? details.email : '',
+      };
+    case 'apple-pay':
+      return {
+        label: details.accountHolderName || details.email || 'Apple Pay',
+        subtitle: details.email && details.accountHolderName ? details.email : '',
       };
     default:
       return { label: 'Payment method', subtitle: '' };
@@ -163,6 +188,20 @@ export function getPaymentMethodRowDisplay(method) {
         fields: [],
       };
     }
+    case 'google-pay': {
+      return {
+        primary: details.accountHolderName?.trim() || details.email || method.label || 'Google Pay',
+        reference: 'Google Pay',
+        fields: [{ label: 'Google account email', value: details.email || '—', minWidth: 160 }],
+      };
+    }
+    case 'apple-pay': {
+      return {
+        primary: details.accountHolderName?.trim() || details.email || method.label || 'Apple Pay',
+        reference: 'Apple Pay',
+        fields: [{ label: 'Apple ID email', value: details.email || '—', minWidth: 160 }],
+      };
+    }
     default: {
       return {
         primary: method.label ?? 'Payment method',
@@ -196,6 +235,10 @@ export function getPaymentMethodShortLabel(method) {
       return details.accountLast4 ? `bank account •••• ${details.accountLast4}` : 'your bank account';
     case 'paypal':
       return details.email ? `PayPal (${details.email})` : 'PayPal';
+    case 'google-pay':
+      return details.email ? `Google Pay (${details.email})` : 'Google Pay';
+    case 'apple-pay':
+      return details.email ? `Apple Pay (${details.email})` : 'Apple Pay';
     default:
       return method.label ?? null;
   }

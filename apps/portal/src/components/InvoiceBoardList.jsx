@@ -8,6 +8,7 @@ import { semantic } from '@signal/design-tokens/colors';
 import { Checkbox } from './design-system/Checkbox';
 import { ContractChip } from './design-system/ContractChip';
 import { InvoiceViewIconButton } from './InvoiceViewIconButton';
+import { INVOICE_OVERDUE_ORANGE, INVOICE_PAID_DOT, INVOICE_PAID_HALO } from '../data/invoiceStatusColors';
 import { formatInvoiceDueDate } from '../data/mockInvoices';
 
 const BOARD_SECTIONS = [
@@ -26,8 +27,8 @@ const BOARD_SECTIONS = [
   {
     status: 'Paid',
     title: 'PAID',
-    badgeBg: semantic.surface.successSubtle,
-    badgeColor: semantic.status.onSubtle.success,
+    badgeBg: INVOICE_PAID_HALO,
+    badgeColor: INVOICE_PAID_DOT,
   },
 ];
 
@@ -125,7 +126,7 @@ function InvoiceBoardRow({ invoice, selected, onToggle, onOpen, showDivider = tr
           value={formatInvoiceDueDate(invoice.dueDate)}
           valueSx={
             invoice.status === 'Overdue'
-              ? { color: theme.palette.error.main, fontWeight: 500 }
+              ? { color: INVOICE_OVERDUE_ORANGE, fontWeight: 500 }
               : { color: theme.palette.textSecondary2, fontWeight: 400 }
           }
         />
@@ -151,7 +152,7 @@ function InvoiceBoardRow({ invoice, selected, onToggle, onOpen, showDivider = tr
           size="sm"
           valueSx={
             invoice.status === 'Overdue'
-              ? { color: theme.palette.error.main, fontWeight: 500 }
+              ? { color: INVOICE_OVERDUE_ORANGE, fontWeight: 500 }
               : { color: theme.palette.textSecondary3, fontWeight: 400 }
           }
         />

@@ -60,7 +60,7 @@ const MuiTextField = ({ _palette }) => ({
 
       '& .MuiOutlinedInput-notchedOutline': {
         borderRadius: '8px',
-        border: '1px solid #D0CFD2', // Border Color
+        border: borderStyle.inputDefault,
         zIndex: 0,
       },
 
@@ -85,11 +85,11 @@ const MuiTextField = ({ _palette }) => ({
       },
 
       '&.Mui-disabled .MuiOutlinedInput-notchedOutline': {
-        borderColor: '#D0CFD2', // When readOnly / Disabled input
+        borderColor: borderOverride.inputDefault,
       },
 
       '&.Mui-disabled:hover .MuiOutlinedInput-notchedOutline': {
-        borderColor: '#D0CFD2', // When readOnly / Disabled input & hovered
+        borderColor: borderOverride.inputDefault,
       },
       '&.Mui-disabled': {
         '& .MuiInputAdornment-root': {

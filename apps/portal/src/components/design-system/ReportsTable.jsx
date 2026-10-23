@@ -9,17 +9,50 @@ import TableHead from '@mui/material/TableHead';
 import TableRow from '@mui/material/TableRow';
 import TableSortLabel from '@mui/material/TableSortLabel';
 import Typography from '@mui/material/Typography';
-import { useTheme } from '@mui/material/styles';
-import DownloadOutlinedIcon from '@mui/icons-material/DownloadOutlined';
+import { alpha, useTheme } from '@mui/material/styles';
+import FileDownloadOutlinedIcon from '@mui/icons-material/FileDownloadOutlined';
+import { Checkbox } from './Checkbox';
 import { NewSiteBadge } from './NewSiteBadge';
 import { ReportTypeChip } from './ReportTypeChip';
 import { formatInvoiceDueDate } from '../../data/mockInvoices';
 
-export function ReportsTable({ reports, sortField, sortDirection, onSort, onOpenReport, onDownload }) {
+export function ReportsTable({
+  reports,
+  sortField,
+  sortDirection,
+  onSort,
+  onOpenReport,
+  onDownload,
+  selectedIds = [],
+  onToggleRow,
+  onToggleAll,
+}) {
   const theme = useTheme();
+  const rowHoverBackground = alpha(theme.palette.textPrimary, 0.02);
   const isInteractive = Boolean(onOpenReport);
+  const selectionEnabled = Boolean(onToggleRow && onToggleAll);
+  const allSelected = selectionEnabled && reports.length > 0 && reports.every((report) => selectedIds.includes(report.id));
+  const someSelected =
+    selectionEnabled && reports.some((report) => selectedIds.includes(report.id)) && !allSelected;
 
   const cellPaddingX = '24px';
+  const checkboxColumnWidth = 56;
+
+  const checkboxSx = {
+    p: 0,
+    width: 18,
+    height: 18,
+    color: theme.palette.textDisabled,
+    '& .MuiSvgIcon-root': {
+      fontSize: 18,
+    },
+    '&.Mui-checked': {
+      color: theme.palette.primary.main,
+    },
+    '&.Mui-disabled': {
+      color: theme.palette.action.disabled,
+    },
+  };
 
   const headerCellSx = {
     fontWeight: 500,
@@ -45,11 +78,52 @@ export function ReportsTable({ reports, sortField, sortDirection, onSort, onOpen
        screen. Without the explicit minWidth the fixed layout pushed the whole
        page sideways instead — 723px of document in a 375px viewport. */
     <TableContainer sx={{ width: '100%', maxWidth: '100%', overflowX: 'auto' }}>
-      <Table sx={{ tableLayout: 'fixed', minWidth: 820 }}>
+      <Table sx={{ tableLayout: 'fixed', width: '100%', minWidth: selectionEnabled ? 876 : 820 }}>
         <TableHead>
           <TableRow>
-            <TableCell sx={{ ...headerCellSx, width: '24%' }}>Site</TableCell>
-            <TableCell sx={{ ...headerCellSx, width: '16%' }}>Company</TableCell>
+            {selectionEnabled ? (
+              <TableCell
+                sx={{
+                  ...headerCellSx,
+                  width: checkboxColumnWidth,
+                  minWidth: checkboxColumnWidth,
+                  maxWidth: checkboxColumnWidth,
+                  px: 2,
+                  boxSizing: 'border-box',
+                }}
+              >
+                <Checkbox
+                  size="small"
+                  disableRipple
+                  checked={allSelected}
+                  indeterminate={someSelected}
+                  disabled={reports.length === 0}
+                  onChange={(event) => onToggleAll?.(event.target.checked)}
+                  inputProps={{ 'aria-label': 'Select all reports on this page' }}
+                  sx={checkboxSx}
+                />
+              </TableCell>
+            ) : null}
+            <TableCell sx={{ ...headerCellSx, width: '24%' }} sortDirection={sortField === 'site' ? sortDirection : false}>
+              <TableSortLabel
+                active={sortField === 'site'}
+                direction={sortField === 'site' ? sortDirection : 'desc'}
+                onClick={() => onSort('site')}
+                sx={sortLabelSx}
+              >
+                Site
+              </TableSortLabel>
+            </TableCell>
+            <TableCell sx={{ ...headerCellSx, width: '16%' }} sortDirection={sortField === 'company' ? sortDirection : false}>
+              <TableSortLabel
+                active={sortField === 'company'}
+                direction={sortField === 'company' ? sortDirection : 'desc'}
+                onClick={() => onSort('company')}
+                sx={sortLabelSx}
+              >
+                Company
+              </TableSortLabel>
+            </TableCell>
             <TableCell sx={{ ...headerCellSx, width: '18%' }}>Report Type</TableCell>
             <TableCell sx={{ ...headerCellSx, width: '18%' }} sortDirection={sortField === 'day' ? sortDirection : false}>
               <TableSortLabel
@@ -72,8 +146,21 @@ export function ReportsTable({ reports, sortField, sortDirection, onSort, onOpen
               </TableSortLabel>
             </TableCell>
             {onDownload ? (
-              <TableCell sx={{ ...headerCellSx, width: '6%' }}>
-                <Box component="span" sx={{ position: 'absolute', width: 1, height: 1, overflow: 'hidden', clip: 'rect(0 0 0 0)' }}>
+              <TableCell sx={{ ...headerCellSx, width: '6%', position: 'relative' }} aria-label="Download">
+                <Box
+                  component="span"
+                  sx={{
+                    position: 'absolute',
+                    width: '1px',
+                    height: '1px',
+                    p: 0,
+                    m: '-1px',
+                    overflow: 'hidden',
+                    clip: 'rect(0, 0, 0, 0)',
+                    whiteSpace: 'nowrap',
+                    border: 0,
+                  }}
+                >
                   Download
                 </Box>
               </TableCell>
@@ -84,7 +171,7 @@ export function ReportsTable({ reports, sortField, sortDirection, onSort, onOpen
           {reports.map((report) => (
             <TableRow
               key={report.id}
-              hover={isInteractive}
+              hover={false}
               onClick={isInteractive ? () => onOpenReport(report) : undefined}
               /* The row is the target, so it is also the tab stop and answers
                  Enter — a row you can click but not reach by keyboard is a row
@@ -103,12 +190,28 @@ export function ReportsTable({ reports, sortField, sortDirection, onSort, onOpen
                   : undefined
               }
               sx={{
+                transition: 'background-color 0.15s ease',
                 cursor: isInteractive ? 'pointer' : 'default',
+                '&:hover': {
+                  backgroundColor: rowHoverBackground,
+                },
+                '&:hover td': {
+                  backgroundColor: rowHoverBackground,
+                },
                 '& td': {
                   borderBottom: `1px solid ${theme.palette.borderSubtle1}`,
                   py: 2,
                   px: cellPaddingX,
                 },
+                '& td:first-of-type': selectionEnabled
+                  ? {
+                      width: checkboxColumnWidth,
+                      minWidth: checkboxColumnWidth,
+                      maxWidth: checkboxColumnWidth,
+                      px: 2,
+                      boxSizing: 'border-box',
+                    }
+                  : {},
                 '&:last-child td': { borderBottom: 0 },
                 '&:focus-visible': {
                   outline: `2px solid ${theme.palette.primary.main}`,
@@ -119,6 +222,18 @@ export function ReportsTable({ reports, sortField, sortDirection, onSort, onOpen
                 '&:hover .report-row-download': { opacity: 1 },
               }}
             >
+              {selectionEnabled ? (
+                <TableCell onClick={(event) => event.stopPropagation()}>
+                  <Checkbox
+                    size="small"
+                    disableRipple
+                    checked={selectedIds.includes(report.id)}
+                    onChange={() => onToggleRow?.(report.id)}
+                    inputProps={{ 'aria-label': `Select report for ${report.site}, ${report.date}` }}
+                    sx={checkboxSx}
+                  />
+                </TableCell>
+              ) : null}
               <TableCell>
                 <Stack direction="row" alignItems="center" spacing={1}>
                   <Typography variant="body2" sx={{ color: theme.palette.textPrimary, fontWeight: 500, fontSize: 14 }}>
@@ -177,7 +292,7 @@ export function ReportsTable({ reports, sortField, sortDirection, onSort, onOpen
                       '@media (hover: none)': { opacity: 1 },
                     }}
                   >
-                    <DownloadOutlinedIcon sx={{ fontSize: 18 }} />
+                    <FileDownloadOutlinedIcon sx={{ fontSize: 18 }} />
                   </IconButton>
                 </TableCell>
               ) : null}

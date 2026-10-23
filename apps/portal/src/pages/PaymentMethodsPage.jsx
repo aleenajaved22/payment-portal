@@ -21,6 +21,8 @@ import {
 } from '../data/paymentMethodCategories';
 import { PAYMENT_METHOD_TYPES } from '../components/payment-method-logos';
 
+const CONTENT_MAX_WIDTH = 952;
+
 export function PaymentMethodsPage() {
   const theme = useTheme();
   const [query, setQuery] = useState('');
@@ -29,7 +31,6 @@ export function PaymentMethodsPage() {
     defaultMethodId,
     addPaymentMethod,
     removePaymentMethod,
-    setDefaultPaymentMethod,
   } = usePaymentMethods();
   const [addOpen, setAddOpen] = useState(false);
   const [addCategory, setAddCategory] = useState(null);
@@ -69,7 +70,8 @@ export function PaymentMethodsPage() {
   }, [methods, query]);
 
   return (
-    <PortalShell activeNav={false}>
+    <PortalShell activeNav={false} mainSx={{ pb: 0 }}>
+      <Box sx={{ width: '100%', maxWidth: CONTENT_MAX_WIDTH, mx: 'auto' }}>
       <Stack spacing={2.5} sx={{ width: '100%' }}>
         <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2} alignItems={{ sm: 'center' }} justifyContent="space-between">
           <Search
@@ -86,7 +88,7 @@ export function PaymentMethodsPage() {
                 height: 36,
               },
               '& .MuiOutlinedInput-input': { fontSize: 14, fontWeight: 500, py: '7px' },
-              '& .MuiOutlinedInput-notchedOutline': { borderColor: theme.palette.borderSubtle2 },
+              '& .MuiOutlinedInput-notchedOutline': { borderColor: theme.palette.borderSubtle1 },
             }}
             InputProps={{
               startAdornment: (
@@ -102,7 +104,7 @@ export function PaymentMethodsPage() {
             startIcon={<AddIcon sx={{ fontSize: 18 }} />}
             sx={{ height: 36, px: 2.5, flexShrink: 0 }}
           >
-            Add Payment method
+            Add
           </Button>
         </Stack>
 
@@ -118,7 +120,7 @@ export function PaymentMethodsPage() {
                 startIcon={<AddIcon sx={{ fontSize: 18 }} />}
                 sx={{ mt: 3 }}
               >
-                Add Payment method
+                Add
               </Button>
             </EmptyState>
           ) : null}
@@ -158,8 +160,6 @@ export function PaymentMethodsPage() {
                       <PaymentMethodListRow
                         key={method.id}
                         method={method}
-                        isDefault={method.id === defaultMethodId}
-                        onSetDefault={setDefaultPaymentMethod}
                         onRemove={() => setMethodPendingRemoval(method)}
                         isFirst={index === 0}
                       />
@@ -171,6 +171,7 @@ export function PaymentMethodsPage() {
           })}
         </Box>
       </Stack>
+      </Box>
 
       <ConfirmDialog
         open={Boolean(methodPendingRemoval)}

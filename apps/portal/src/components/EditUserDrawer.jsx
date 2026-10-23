@@ -1,26 +1,18 @@
 import Box from '@mui/material/Box';
 import Divider from '@mui/material/Divider';
 import IconButton from '@mui/material/IconButton';
-import MenuItem from '@mui/material/MenuItem';
-import ListItemText from '@mui/material/ListItemText';
 import Stack from '@mui/material/Stack';
 import Typography from '@mui/material/Typography';
 import { useTheme } from '@mui/material/styles';
 import CloseIcon from '@mui/icons-material/Close';
 import { primitive } from '@signal/design-tokens/colors';
 import { useEffect, useMemo, useState } from 'react';
-import { Button, Drawer, Select, TextField } from './design-system';
+import { Button, Drawer, TextField } from './design-system';
 import { MultiSelectWithChips } from './MultiSelectWithChips';
-import {
-  SelectChevronIcon,
-  drawerSelectFieldSx,
-  drawerSelectMenuProps,
-} from './selectChevronProps';
 import { FRANCHISE_OPTIONS, getSitesForFranchises } from '../data/franchiseSiteCatalog';
 import { getUserAssociations } from '../data/userAssociationsMock';
-import { USER_ROLES, getRole, getRoleIdFromLabel } from '../data/mockUsers';
 
-const DRAWER_WIDTH = 'min(580px, 96vw)';
+const DRAWER_WIDTH = 'min(610px, 96vw)';
 
 const fieldInputSx = (theme) => ({
   '& .MuiOutlinedInput-root': {
@@ -55,7 +47,22 @@ const readOnlyEmailSx = (theme) => ({
   },
 });
 
-function FieldLabel({ children, htmlFor }) {
+function splitDisplayName(fullName) {
+  const trimmed = (fullName ?? '').trim();
+  if (!trimmed) return { firstName: '', lastName: '' };
+  const spaceIndex = trimmed.indexOf(' ');
+  if (spaceIndex === -1) return { firstName: trimmed, lastName: '' };
+  return {
+    firstName: trimmed.slice(0, spaceIndex),
+    lastName: trimmed.slice(spaceIndex + 1).trim(),
+  };
+}
+
+function combineDisplayName(firstName, lastName) {
+  return [firstName, lastName].map((part) => part.trim()).filter(Boolean).join(' ');
+}
+
+function FieldLabel({ children, htmlFor, required = false }) {
   const theme = useTheme();
   return (
     <Typography
@@ -71,6 +78,11 @@ function FieldLabel({ children, htmlFor }) {
       }}
     >
       {children}
+      {required ? (
+        <Box component="span" sx={{ color: theme.palette.textAlert, ml: 0.25 }} aria-hidden="true">
+          *
+        </Box>
+      ) : null}
     </Typography>
   );
 }
@@ -78,8 +90,8 @@ function FieldLabel({ children, htmlFor }) {
 /** CBX Edit User — same fields as invite, email read-only. */
 export function EditUserDrawer({ open, user, onClose, onUpdate }) {
   const theme = useTheme();
-  const [name, setName] = useState('');
-  const [roleLabel, setRoleLabel] = useState('');
+  const [firstName, setFirstName] = useState('');
+  const [lastName, setLastName] = useState('');
   const [franchises, setFranchises] = useState([]);
   const [sites, setSites] = useState([]);
   const [error, setError] = useState(null);
@@ -89,8 +101,9 @@ export function EditUserDrawer({ open, user, onClose, onUpdate }) {
   useEffect(() => {
     if (!open || !user) return;
     const associations = getUserAssociations(user);
-    setName(user.name ?? '');
-    setRoleLabel(getRole(user.roleId).label);
+    const { firstName: first, lastName: last } = splitDisplayName(user.name);
+    setFirstName(first);
+    setLastName(last);
     setFranchises(associations.franchises ?? []);
     setSites(associations.sites ?? []);
     setError(null);
@@ -102,12 +115,11 @@ export function EditUserDrawer({ open, user, onClose, onUpdate }) {
 
   const submit = () => {
     if (!user) return undefined;
-    if (!name.trim()) return setError('Name is required');
-    if (!roleLabel) return setError('Role is required');
+    if (!firstName.trim()) return setError('First name is required');
 
     onUpdate(user.id, {
-      name: name.trim(),
-      roleId: getRoleIdFromLabel(roleLabel),
+      name: combineDisplayName(firstName, lastName),
+      roleId: user.roleId,
       franchises,
       sites,
     });
@@ -144,53 +156,46 @@ export function EditUserDrawer({ open, user, onClose, onUpdate }) {
 
         <Divider sx={{ mt: 2, mb: 2, borderColor: theme.palette.borderSubtle1 }} />
 
-        <Box sx={{ flex: 1, overflowY: 'auto', minHeight: 0 }}>
-          <Stack spacing={3}>
-            <Stack direction={{ xs: 'column', sm: 'row' }} spacing={3} alignItems={{ sm: 'flex-start' }}>
+        <Box sx={{ flex: 1, overflowY: 'auto', minHeight: 0, width: '100%' }}>
+          <Stack spacing={3} sx={{ width: '100%' }}>
+            <Stack
+              direction={{ xs: 'column', sm: 'row' }}
+              spacing={3}
+              alignItems={{ sm: 'flex-start' }}
+              sx={{ width: '100%' }}
+            >
               <Box sx={{ flex: 1, minWidth: 0 }}>
-                <FieldLabel htmlFor="edit-user-name">Name</FieldLabel>
+                <FieldLabel htmlFor="edit-user-first-name" required>
+                  First Name
+                </FieldLabel>
                 <TextField
-                  id="edit-user-name"
+                  id="edit-user-first-name"
                   fullWidth
-                  placeholder="Type name"
-                  value={name}
+                  value={firstName}
+                  disabled
+                  sx={readOnlyEmailSx(theme)}
+                />
+              </Box>
+              <Box sx={{ flex: 1, minWidth: 0 }}>
+                <FieldLabel htmlFor="edit-user-last-name">Last Name</FieldLabel>
+                <TextField
+                  id="edit-user-last-name"
+                  fullWidth
+                  placeholder="Type last name"
+                  value={lastName}
                   onChange={(event) => {
-                    setName(event.target.value);
+                    setLastName(event.target.value);
                     if (error) setError(null);
                   }}
                   sx={fieldInputSx(theme)}
                 />
               </Box>
-              <Box sx={{ flex: 1, minWidth: 0 }}>
-                <FieldLabel htmlFor="edit-user-role">Role</FieldLabel>
-                <Select
-                  id="edit-user-role"
-                  fullWidth
-                  IconComponent={SelectChevronIcon}
-                  MenuProps={drawerSelectMenuProps(theme)}
-                  value={roleLabel}
-                  onChange={(event) => {
-                    setRoleLabel(event.target.value);
-                    if (error) setError(null);
-                  }}
-                  sx={drawerSelectFieldSx(theme, fieldInputSx)}
-                >
-                  {USER_ROLES.map((role) => (
-                    <MenuItem key={role.id} value={role.label}>
-                      <ListItemText
-                        primary={role.label}
-                        secondary={role.summary}
-                        primaryTypographyProps={{ fontSize: 14, fontWeight: 500, color: theme.palette.textPrimary }}
-                        secondaryTypographyProps={{ fontSize: 12, lineHeight: '18px', color: theme.palette.textSecondary3 }}
-                      />
-                    </MenuItem>
-                  ))}
-                </Select>
-              </Box>
             </Stack>
 
-            <Box>
-              <FieldLabel htmlFor="edit-user-email">Email</FieldLabel>
+            <Box sx={{ width: '100%', maxWidth: '100%', alignSelf: 'stretch' }}>
+              <FieldLabel htmlFor="edit-user-email" required>
+                Email
+              </FieldLabel>
               <TextField
                 id="edit-user-email"
                 fullWidth
@@ -215,6 +220,7 @@ export function EditUserDrawer({ open, user, onClose, onUpdate }) {
                 <MultiSelectWithChips
                   id="edit-franchises"
                   label="Franchise"
+                  required
                   placeholder="Select Franchise"
                   options={FRANCHISE_OPTIONS}
                   value={franchises}
@@ -223,6 +229,7 @@ export function EditUserDrawer({ open, user, onClose, onUpdate }) {
                 <MultiSelectWithChips
                   id="edit-sites"
                   label="Sites"
+                  required
                   placeholder={franchises.length === 0 ? 'Select a franchise first' : 'Select Site'}
                   options={siteOptions}
                   value={sites}

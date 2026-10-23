@@ -1,4 +1,5 @@
 import Box from '@mui/material/Box';
+import { PAYMENT_METHOD_LOGO_SIZE } from './payment-method-logos';
 import amexMark from '../assets/payment-brands/amex.svg';
 import discoverMark from '../assets/payment-brands/discover.svg';
 import mastercardMark from '../assets/payment-brands/mastercard.svg';
@@ -27,9 +28,11 @@ export function getPaymentBrandMark(brandId) {
  */
 export const BRAND_SLOT = { width: 44, height: 20 };
 
-export function PaymentBrandMark({ brandId, label }) {
+export function PaymentBrandMark({ brandId, label, fit = 'slot' }) {
   const mark = getPaymentBrandMark(brandId);
   if (!mark) return null;
+
+  const inTile = fit === 'tile';
 
   return (
     <Box
@@ -37,8 +40,8 @@ export function PaymentBrandMark({ brandId, label }) {
       src={mark.src}
       alt={label ?? mark.label}
       sx={{
-        width: BRAND_SLOT.width,
-        height: BRAND_SLOT.height,
+        width: inTile ? PAYMENT_METHOD_LOGO_SIZE : BRAND_SLOT.width,
+        height: inTile ? PAYMENT_METHOD_LOGO_SIZE : BRAND_SLOT.height,
         objectFit: 'contain',
         objectPosition: 'center',
         display: 'block',

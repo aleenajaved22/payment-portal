@@ -1,4 +1,5 @@
 import { formatMMDDYY, parseInvoiceDate } from './mockInvoices';
+import { getReportPdfUrl } from './reportDocumentMock';
 
 /**
  * The date-range filter behind the reports toolbar.
@@ -35,9 +36,10 @@ function startOfWeek(date) {
  * Returns null for "no filter", which is what an unset select means.
  */
 export function getReportDateRange(option, now = new Date()) {
+  const preset = option || 'This Week';
   const today = startOfDay(now);
 
-  switch (option) {
+  switch (preset) {
     case 'This Week': {
       const from = startOfWeek(today);
       return { from, to: new Date(from.getTime() + 6 * DAY_MS) };
@@ -87,26 +89,45 @@ export function isReportInRange(report, range) {
   return time >= range.from.getTime() && time < range.to.getTime() + DAY_MS;
 }
 
-/**
- * Sample export for the mock. Real report files would replace this blob — the
- * filename convention is what would carry over.
- */
-export function downloadReport(report) {
-  const safe = (value) => String(value).replace(/[^a-z0-9]+/gi, '-').replace(/^-+|-+$/g, '');
-  const filename = `${safe(report.reportType)}_${safe(report.site)}_${safe(report.date)}.txt`;
-  const body =
-    `FilterGo — ${report.reportType}\n` +
-    `Site: ${report.site}\n` +
-    (report.company ? `Company: ${report.company}\n` : '') +
-    `Date: ${report.date}\n\n` +
-    `This is a sample export for the customer portal demo.\n`;
+/** Same window logic as reports, applied to invoice due dates. */
+export function getInvoicesSpan(invoices = []) {
+  const times = invoices
+    .map((invoice) => parseInvoiceDate(invoice.dueDate)?.getTime())
+    .filter((time) => time != null && !Number.isNaN(time));
 
-  const url = URL.createObjectURL(new Blob([body], { type: 'text/plain' }));
-  const anchor = document.createElement('a');
-  anchor.href = url;
-  anchor.download = filename;
-  document.body.appendChild(anchor);
-  anchor.click();
-  anchor.remove();
-  URL.revokeObjectURL(url);
+  if (times.length === 0) return null;
+  return { from: new Date(Math.min(...times)), to: new Date(Math.max(...times)) };
+}
+
+export function isInvoiceDueInRange(invoice, range) {
+  if (!range) return true;
+  const time = parseInvoiceDate(invoice.dueDate)?.getTime();
+  if (time == null || Number.isNaN(time)) return true;
+  return time >= range.from.getTime() && time < range.to.getTime() + DAY_MS;
+}
+
+/**
+ * Demo download uses the same PDF shown in the report preview drawer.
+ */
+export async function downloadReport(report) {
+  const safe = (value) => String(value).replace(/[^a-z0-9]+/gi, '-').replace(/^-+|-+$/g, '');
+  const filename = `${safe(report.reportType)}_${safe(report.site)}_${safe(report.date)}.pdf`;
+  const pdfPath = getReportPdfUrl(report);
+  const pdfUrl = pdfPath.startsWith('http') ? pdfPath : new URL(pdfPath, window.location.origin).href;
+
+  try {
+    const response = await fetch(pdfUrl);
+    if (!response.ok) throw new Error(`HTTP ${response.status}`);
+    const blob = await response.blob();
+    const url = URL.createObjectURL(blob);
+    const anchor = document.createElement('a');
+    anchor.href = url;
+    anchor.download = filename;
+    document.body.appendChild(anchor);
+    anchor.click();
+    anchor.remove();
+    URL.revokeObjectURL(url);
+  } catch {
+    window.open(pdfUrl, '_blank', 'noopener,noreferrer');
+  }
 }

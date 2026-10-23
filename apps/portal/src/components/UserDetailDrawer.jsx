@@ -4,11 +4,13 @@ import Stack from '@mui/material/Stack';
 import Typography from '@mui/material/Typography';
 import { useTheme } from '@mui/material/styles';
 import CloseIcon from '@mui/icons-material/Close';
+import { primitive } from '@signal/design-tokens/colors';
 import { Drawer, UserRoleChip } from './design-system';
+import { useAuth } from '../auth/AuthContext';
 import { formatUserAddedAt, getRole } from '../data/mockUsers';
 import { getUserAssociations } from '../data/userAssociationsMock';
 
-const DRAWER_WIDTH = 'min(580px, 96vw)';
+const DRAWER_WIDTH = 'min(610px, 96vw)';
 
 function AssociationBadge({ label }) {
   const theme = useTheme();
@@ -47,8 +49,13 @@ function AssociationSection({ title, items }) {
 /** Read-only user profile panel — CBX "view users" drawer. */
 export function UserDetailDrawer({ open, user, onClose }) {
   const theme = useTheme();
+  const { session } = useAuth();
   const associations = user ? getUserAssociations(user) : { franchises: [], sites: [] };
   const role = user ? getRole(user.roleId) : null;
+  const isCurrentUser =
+    Boolean(session?.email) &&
+    Boolean(user?.email) &&
+    user.email.toLowerCase() === session.email.toLowerCase();
 
   return (
     <Drawer
@@ -89,6 +96,12 @@ export function UserDetailDrawer({ open, user, onClose }) {
               noWrap
             >
               {user?.name ?? ''}
+              {isCurrentUser ? (
+                <Box component="span" sx={{ color: primitive.grey[500], fontWeight: 500 }}>
+                  {' '}
+                  (You)
+                </Box>
+              ) : null}
             </Typography>
             <Stack direction="row" alignItems="center" spacing={0.5} sx={{ mt: 0.5, flexWrap: 'wrap', rowGap: 0.5 }}>
               <Typography sx={{ fontSize: 12, fontWeight: 500, lineHeight: '18px', color: theme.palette.textSecondary1 }}>
