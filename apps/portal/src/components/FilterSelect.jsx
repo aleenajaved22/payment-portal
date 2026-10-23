@@ -27,6 +27,7 @@ export function FilterSelect({
   value,
   onChange,
   options,
+  optionDescriptions = null,
   clearFirstOption = true,
   searchable = false,
   searchPlaceholder = 'Search',
@@ -109,7 +110,7 @@ export function FilterSelect({
             elevation: 0,
             sx: {
               mt: 0.5,
-              minWidth: 220,
+              minWidth: optionDescriptions ? 280 : 220,
               borderRadius: '8px',
               border: `1px solid ${theme.palette.borderSubtle1}`,
               boxShadow: dropdownMenuPaperShadow,
@@ -181,9 +182,41 @@ export function FilterSelect({
         ) : (
           visibleOptions.map((option) => {
             const menuValue = clearFirstOption && option === options[0] ? '' : option;
+            const description = optionDescriptions?.[option];
             return (
-              <MenuItem key={option} value={menuValue} sx={{ ...filterDisplayTextSx, py: 1.25, px: 2 }}>
-                {option}
+              <MenuItem
+                key={option}
+                value={menuValue}
+                sx={{
+                  ...filterDisplayTextSx,
+                  py: description ? 1 : 1.25,
+                  px: 2,
+                  alignItems: description ? 'flex-start' : 'center',
+                  whiteSpace: description ? 'normal' : 'nowrap',
+                }}
+              >
+                {description ? (
+                  <Box>
+                    <Box component="span" sx={{ display: 'block' }}>
+                      {option}
+                    </Box>
+                    <Box
+                      component="span"
+                      sx={{
+                        display: 'block',
+                        mt: 0.25,
+                        fontSize: 12,
+                        fontWeight: 400,
+                        lineHeight: '18px',
+                        color: theme.palette.textSecondary3,
+                      }}
+                    >
+                      {description}
+                    </Box>
+                  </Box>
+                ) : (
+                  option
+                )}
               </MenuItem>
             );
           })

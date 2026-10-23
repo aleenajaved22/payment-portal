@@ -252,7 +252,7 @@ const mockInvoiceRows = [
     amount: '$1,450.00',
     status: 'Payment Failed',
     contract: 'Contract Q1-2024',
-    dueDate: dueIn(4),
+    dueDate: dueIn(1),
     invoiceDate: issuedAgo(13),
     paymentTerms: 'NET 10',
     filterCount: 10,
@@ -301,6 +301,12 @@ export const invoiceStatusFilterOptions = [
   'Payment Failed',
 ];
 
+/** Shown under the status in the filter menu (e.g. failure reason). */
+export const invoiceStatusFilterOptionDescriptions = {
+  'Payment Failed':
+    mockInvoices.find((invoice) => invoice.status === 'Payment Failed')?.paymentFailureReason ?? '',
+};
+
 export function isAllStatusesFilter(status) {
   return !status || status === ALL_STATUS_FILTER || status === 'All statuses';
 }
@@ -319,7 +325,10 @@ export function getOverdueInvoices(invoices = mockInvoices) {
 }
 
 export function getUnpaidInvoices(invoices = mockInvoices) {
-  return invoices.filter((invoice) => invoice.status === 'Pending' || invoice.status === 'Overdue');
+  return invoices.filter(
+    (invoice) =>
+      invoice.status === 'Pending' || invoice.status === 'Overdue' || invoice.status === 'Payment Failed',
+  );
 }
 
 export function getBillToForSite(site) {

@@ -7,7 +7,11 @@ import { FilterSelect } from './FilterSelect';
 import { ToolbarDateRangeField } from './ToolbarDateRangeField';
 import { Button, Search } from './design-system';
 import { toolbarSearchFieldSx, toolbarSearchIconSx } from './toolbarSearchFieldSx';
-import { invoiceSiteFilterOptions, invoiceStatusFilterOptions } from '../data/mockInvoices';
+import {
+  invoiceSiteFilterOptions,
+  invoiceStatusFilterOptionDescriptions,
+  invoiceStatusFilterOptions,
+} from '../data/mockInvoices';
 import { weekFilterOptions } from '../data/mockReports';
 
 const SEARCH_PLACEHOLDER = 'Search by invoice no.';
@@ -72,6 +76,7 @@ export function InvoicesToolbar({
             value={status}
             onChange={onStatusChange}
             options={invoiceStatusFilterOptions}
+            optionDescriptions={invoiceStatusFilterOptionDescriptions}
             clearFirstOption={false}
           />
           <FilterSelect

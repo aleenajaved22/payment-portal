@@ -120,7 +120,8 @@ export function InvoicePaymentPage() {
           invoice.amount.toLowerCase().includes(normalized) ||
           invoice.status.toLowerCase().includes(normalized) ||
           invoice.contract.toLowerCase().includes(normalized) ||
-          invoice.dueDate.toLowerCase().includes(normalized),
+          invoice.dueDate.toLowerCase().includes(normalized) ||
+          (invoice.paymentFailureReason ?? '').toLowerCase().includes(normalized),
       );
     }
 

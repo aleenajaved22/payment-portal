@@ -8,10 +8,23 @@ import { semantic } from '@signal/design-tokens/colors';
 import { Checkbox } from './design-system/Checkbox';
 import { ContractChip } from './design-system/ContractChip';
 import { InvoiceViewIconButton } from './InvoiceViewIconButton';
-import { INVOICE_OVERDUE_ORANGE, INVOICE_PAID_DOT, INVOICE_PAID_HALO } from '../data/invoiceStatusColors';
+import {
+  INVOICE_OVERDUE_ORANGE,
+  INVOICE_PAID_DOT,
+  INVOICE_PAID_HALO,
+  INVOICE_PAYMENT_FAILED_HALO,
+  INVOICE_PAYMENT_FAILED_RED,
+} from '../data/invoiceStatusColors';
+import { InvoiceStatusChip } from './design-system/InvoiceStatusChip';
 import { formatInvoiceDueDate } from '../data/mockInvoices';
 
 const BOARD_SECTIONS = [
+  {
+    status: 'Payment Failed',
+    title: 'PAYMENT FAILED',
+    badgeBg: INVOICE_PAYMENT_FAILED_HALO,
+    badgeColor: INVOICE_PAYMENT_FAILED_RED,
+  },
   {
     status: 'Overdue',
     title: 'OVERDUE',
@@ -59,8 +72,9 @@ function InvoiceBoardRow({ invoice, selected, onToggle, onOpen, showDivider = tr
   const theme = useTheme();
   const isSelectable = invoice.status !== 'Paid';
   const isPaid = invoice.status === 'Paid';
+  const isPaymentFailed = invoice.status === 'Payment Failed';
   const isClickable =
-    invoice.status === 'Pending' || invoice.status === 'Overdue' || isPaid;
+    invoice.status === 'Pending' || invoice.status === 'Overdue' || isPaymentFailed || isPaid;
 
   return (
     <Box
@@ -130,6 +144,9 @@ function InvoiceBoardRow({ invoice, selected, onToggle, onOpen, showDivider = tr
               : { color: theme.palette.textSecondary2, fontWeight: 400 }
           }
         />
+        {isPaymentFailed ? (
+          <InvoiceStatusChip status={invoice.status} failureReason={invoice.paymentFailureReason} />
+        ) : null}
       </Stack>
 
       {isPaid ? (
@@ -250,7 +267,7 @@ export function InvoiceBoardList({ invoices, selectedIds, onToggleRow, onViewInv
   const theme = useTheme();
 
   const byStatus = useMemo(() => {
-    const map = { Overdue: [], Pending: [], Paid: [] };
+    const map = { 'Payment Failed': [], Overdue: [], Pending: [], Paid: [] };
     invoices.forEach((invoice) => {
       if (map[invoice.status]) map[invoice.status].push(invoice);
     });
